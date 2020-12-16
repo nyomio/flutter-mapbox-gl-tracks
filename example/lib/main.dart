@@ -5,7 +5,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
+import 'package:mapbox_gl_example/event_symbol.dart';
 import 'package:mapbox_gl_example/full_map.dart';
+import 'package:mapbox_gl_example/route_page.dart';
 import 'package:mapbox_gl_example/tracker_symbol.dart';
 
 import 'animate_camera.dart';
@@ -22,21 +24,21 @@ import 'scrolling_map.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
   TrackerSymbolPage(),
-  FullMapPage(),
-  AnimateCameraPage(),
-  MoveCameraPage(),
+  EventSymbolPage(),
+  RoutePage(),
+  /*MoveCameraPage(),
   PlaceSymbolPage(),
   PlaceSourcePage(),
   LinePage(),
   PlaceCirclePage(),
   PlaceFillPage(),
-  ScrollingMapPage(),
+  ScrollingMapPage(),*/
 ];
 
 class MapsDemo extends StatelessWidget {
 
   //FIXME: Add your Mapbox access token here
-  static const String ACCESS_TOKEN = "YOUR_TOKEN_HERE";
+  static const String ACCESS_TOKEN = "pk.eyJ1IjoibmFneWlzdHZhbiIsImEiOiJja2lxczJ0dXgxenJjMzFxajVmamJxdGJiIn0.R1muCmqEhEJLAzGPMhcC2A";
 
   void _pushPage(BuildContext context, ExamplePage page) async {
     if (!kIsWeb) {
