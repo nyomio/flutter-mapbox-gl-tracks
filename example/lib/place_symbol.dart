@@ -47,6 +47,10 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
 
   void _onStyleLoaded() {
     addImageFromAsset("assetImage", "assets/symbols/custom-icon.png");
+    addImageFromAsset("stop", "assets/symbols/stop.png");
+    addImageFromAsset("start", "assets/symbols/start.png");
+    addImageFromAsset("map_poi", "assets/symbols/map_poi.png");
+
     addImageFromUrl("networkImage", "https://via.placeholder.com/50");
   }
 

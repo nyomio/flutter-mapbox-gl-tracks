@@ -37,8 +37,54 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
   TrackerSymbolBodyState();
 
   static final LatLng center = const LatLng(47.506363, 19.049595);
-  List<LatLng> trackerList = [LatLng(47.08123,19.04142),LatLng(47.10123,19.05142),LatLng(48.10123,19.05142), LatLng(47.10123,18.05142), LatLng(45.10123,18.05142), LatLng(49.10123,15.05142),
-                              LatLng(47.02123,19.04142),LatLng(47.15123,19.05142),LatLng(48.10123,19.15142), LatLng(47.10123,18.25142), LatLng(47.10123,16.05142), LatLng(48.15123,19.05142)];
+  List<Tracker> getTrackerList() {
+    return [
+      Tracker(0,LatLng(47.08123+(Random().nextInt(9).toDouble()/10),19.04142+(Random().nextInt(9).toDouble()/10)),"#ff0000"),
+      Tracker(1,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#ff0000"),
+      Tracker(2,LatLng(48.10123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#ff0000"),
+      Tracker(3,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),18.05142+(Random().nextInt(9).toDouble()/10)),"#ff0000"),
+      Tracker(4,LatLng(45.10123+(Random().nextInt(9).toDouble()/10),18.05142+(Random().nextInt(9).toDouble()/10)),"#ff0000"),
+      Tracker(5,LatLng(49.10123+(Random().nextInt(9).toDouble()/10),15.05142+(Random().nextInt(9).toDouble()/10)),"#ff0000"),
+      Tracker(6,LatLng(47.02123+(Random().nextInt(9).toDouble()/10),19.04142+(Random().nextInt(9).toDouble()/10)),"#0000ff"),
+      Tracker(7,LatLng(47.15123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#0000ff"),
+      Tracker(8,LatLng(48.10123+(Random().nextInt(9).toDouble()/10),19.15142+(Random().nextInt(9).toDouble()/10)),"#0000ff"),
+      Tracker(10,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),18.25142+(Random().nextInt(9).toDouble()/10)),"#0000ff"),
+      Tracker(11,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),16.05142+(Random().nextInt(9).toDouble()/10)),"#0000ff"),
+      Tracker(12,LatLng(48.15123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#0000ff")
+    ];
+  }
+  Route getRandomRoute() {
+    return Route(0,
+        [
+          LatLng(47.08123+(Random().nextInt(9).toDouble()/10),19.04142+(Random().nextInt(9).toDouble()/10)),
+          LatLng(47.10123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),
+          LatLng(48.10123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),
+          LatLng(47.10123+(Random().nextInt(9).toDouble()/10),18.05142+(Random().nextInt(9).toDouble()/10)),
+          LatLng(45.10123+(Random().nextInt(9).toDouble()/10),18.05142+(Random().nextInt(9).toDouble()/10)),
+          LatLng(49.10123+(Random().nextInt(9).toDouble()/10),15.05142+(Random().nextInt(9).toDouble()/10)),
+          LatLng(47.02123+(Random().nextInt(9).toDouble()/10),19.04142+(Random().nextInt(9).toDouble()/10)),
+          LatLng(47.15123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),
+          LatLng(48.10123+(Random().nextInt(9).toDouble()/10),19.15142+(Random().nextInt(9).toDouble()/10)),
+          LatLng(47.10123+(Random().nextInt(9).toDouble()/10),18.25142+(Random().nextInt(9).toDouble()/10)),
+          LatLng(47.10123+(Random().nextInt(9).toDouble()/10),16.05142+(Random().nextInt(9).toDouble()/10)),
+          LatLng(48.15123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10))
+        ],
+        "#ff0000");
+  }
+
+  Event gerRandomEvent() {
+      int randomNumber = Random().nextInt(2);
+      return Event(
+          eventCount + 1,
+          randomNumber==0 ? "#ff0000" : "#00ff00",
+          randomNumber==0 ? "start" : "stop",
+          LatLng(47.40123+(Random().nextInt(9).toDouble()/10),19.25142+(Random().nextInt(9).toDouble()/10)),
+          0
+      );
+  }
+  int eventCount = 0;
+  int _lineCount = 0;
+  Line _selectedLine;
   MapboxMapController controller;
   int _symbolCount = 0;
   Symbol _selectedSymbol;
@@ -47,17 +93,77 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
   void _onMapCreated(MapboxMapController controller) {
     this.controller = controller;
     controller.onSymbolTapped.add(_onTrackerTapped);
+    controller.onLineTapped.add(_onLineTapped);
+
   }
 
   void _onStyleLoaded() {
+      addImageFromAsset();
+  }
+  Future<void> addImageFromAsset() async{
+       final ByteData bytes = await rootBundle.load("assets/symbols/start.png");
+       final Uint8List list = bytes.buffer.asUint8List();
+       await controller.addImage("start", list);
+       final ByteData bytes2 = await rootBundle.load("assets/symbols/stop.png");
+       final Uint8List list2 = bytes2.buffer.asUint8List();
+       await controller.addImage("stop", list2);
+       final ByteData bytes3 = await rootBundle.load("assets/symbols/map_poi.png");
+       final Uint8List list3 = bytes3.buffer.asUint8List();
+       await controller.addImage("poi", list3);
   }
 
   @override
   void dispose() {
     controller?.onSymbolTapped?.remove(_onTrackerTapped);
+    controller?.onLineTapped?.remove(_onLineTapped);
+
     super.dispose();
   }
+  void _onLineTapped(Line line) {
+    if (_selectedLine != null) {
+      _updateSelectedLine(
+        const LineOptions(
+          lineWidth: 28.0,
+        ),
+      );
+    }
+    setState(() {
+      _selectedLine = line;
+    });
+    _updateSelectedLine(
+      LineOptions(
+        // linecolor: ,
+      ),
+    );
+  }
 
+  void _updateSelectedLine(LineOptions changes) {
+    controller.updateLine(_selectedLine, changes);
+  }
+  void _addLine(Route route) {
+    _removeLine();
+    controller.addLine(
+      LineOptions(
+          geometry: route.coordinates,
+          lineColor: route.color,
+          lineWidth: 3.0,
+          lineOpacity: 0.5,
+          draggable: false
+      ),
+    );
+    _selectedLine = controller.lines.first;
+    setState(() {
+      _lineCount += 1;
+    });
+  }
+
+  void _removeLine() {
+    if (controller.lines.isNotEmpty) {
+      controller.removeLine(controller.lines.first);
+      _lineCount -= 1;
+      _selectedLine = null;
+    }
+  }
   void _onTrackerTapped(Symbol symbol) {
     if (_selectedSymbol != null) {
       _updateSelectedTracker(
@@ -74,26 +180,35 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
     );
   }
 
-  void _addTracker(String iconImage, String iconColor) {
-    List<int> availableNumbers = Iterable<int>.generate(12).toList();
-    controller.symbols.forEach(
-            (s) => availableNumbers.removeWhere((i) => i == s.data['count'])
-    );
-    if (availableNumbers.isNotEmpty) {
+  void _addTracker(Tracker tracker) {
+    if (tracker != null) {
       controller.addSymbol(
-          _getSymbolOptions(iconImage, availableNumbers.first, iconColor),
-          {'count': availableNumbers.first}
+          _getSymbolOptions(tracker.iconImage, tracker.id, tracker.color,
+              tracker.coordinates),
+          {'trackerId': tracker.id}
       );
       setState(() {
         _symbolCount += 1;
       });
     }
   }
-
-  SymbolOptions _getSymbolOptions(String iconImage, int symbolCount, String iconColor){
+  void _addEvent(Event event) {
+    if (event != null) {
+      controller.addSymbol(
+          _getSymbolOptions(event.icon, event.id, event.color,
+              event.coordinate),
+          {'eventId': event.id}
+      );
+      eventCount += 1;
+      setState(() {
+        _symbolCount += 1;
+      });
+    }
+  }
+  SymbolOptions _getSymbolOptions(String iconImage, int symbolCount, String iconColor, LatLng coordinates){
     LatLng geometry = LatLng(
-      trackerList[symbolCount].latitude,
-      trackerList[symbolCount].longitude,
+      coordinates.latitude,
+      coordinates.longitude,
     );
     return iconImage == 'customFont'
         ? SymbolOptions(
@@ -116,23 +231,17 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
     );
   }
 
-  Future<void> _addAllTracker(String iconImage, String iconColor) async {
-    List<int> symbolsToAddNumbers = Iterable<int>.generate(12).toList();
-    controller.symbols.forEach(
-            (s) => symbolsToAddNumbers.removeWhere((i) => i == s.data['count'])
-    );
-
-    if (symbolsToAddNumbers.isNotEmpty) {
-      final List<SymbolOptions> symbolOptionsList = symbolsToAddNumbers.map(
-              (i) => _getSymbolOptions(iconImage, i, iconColor)
-      ).toList();
-      controller.addSymbols(
-          symbolOptionsList,
-          symbolsToAddNumbers.map((i) => {'count': i}).toList()
-      );
+  Future<void> _addAllTracker(List<Tracker> trackers) async {
+    if (trackers != null && trackers.isNotEmpty) {
+      trackers.forEach((tracker) {
+        controller.addSymbol(
+            _getSymbolOptions(tracker.iconImage, tracker.id, tracker.color, tracker.coordinates),
+            {'trackerId': tracker.id}
+        );
+      });
 
       setState(() {
-        _symbolCount += symbolOptionsList.length;
+        _symbolCount += trackers.length;
       });
     }
   }
@@ -149,6 +258,23 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
     setState(() {
       _selectedSymbol = null;
       _symbolCount = 0;
+    });
+  }
+  Future<void> _updateAllTrackerPosition(List<Tracker> trackers) {
+    trackers.forEach((tracker) {
+      Symbol symbol = controller.symbols.firstWhere((element) =>
+      element.data["trackerId"] == tracker.id);
+      if (symbol != null) {
+        _selectedSymbol = symbol;
+        _updateSelectedTracker(
+          SymbolOptions(
+            geometry: LatLng(
+              tracker.coordinates.latitude,
+              tracker.coordinates.longitude,
+            ),
+          ),
+        );
+      }
     });
   }
   Future<void>  _changeTrackerPosition(Symbol symbol, LatLng newCoordinate) {
@@ -244,12 +370,12 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
                       children: <Widget>[
                         FlatButton(
                           child: const Text('add tracker'),
-                          onPressed: () => _addTracker("airport-15", "#ff0000"),
+                          onPressed: () => _addTracker(getTrackerList().first),
                         ),
                         FlatButton(
                           child: const Text('add all tracker'),
                           onPressed: () =>
-                          (controller.symbols.isNotEmpty) ? null : _addAllTracker("airport-15", "#ff0000"),
+                          (controller.symbols.isNotEmpty) ? null : _addAllTracker(getTrackerList()),
                         ),
                         FlatButton(
                           child: const Text('remove tracker'),
@@ -268,18 +394,18 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
                           onPressed: () =>
                           _hideAllTracker(),
                         ),
-                     /*   FlatButton(
-                          child: const Text('hide blue trackers'),
-                          onPressed: () => (_selectedSymbol == null)
-                              ? null
-                              : _hideAllTrackerIf(),
-                        ),*/
-                   /*     FlatButton(
-                          child: const Text('change tracker color'),
-                          onPressed: (_selectedSymbol == null)
-                              ? null
-                              : _changeIconAnchor,
-                        ),*/
+                        FlatButton(
+                          child: const Text('add event'),
+                          onPressed: () => _addEvent(gerRandomEvent()),
+                        ),
+                        FlatButton(
+                          child: const Text('add line'),
+                          onPressed: () => _addLine(getRandomRoute()),
+                        ),
+                        FlatButton(
+                          child: const Text('remove line'),
+                          onPressed: () => _removeLine(),
+                        ),
                         FlatButton(
                           child: const Text('show all tracker'),
                           onPressed: () => _showAllTracker(),
@@ -288,7 +414,10 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
                           child: const Text('change position of first tracker'),
                           onPressed: () => _changeTrackerPosition(controller.symbols.first, LatLng(47.506914+(Random().nextInt(9).toDouble()/10),19.048292+(Random().nextInt(9).toDouble()/10))),
                         ),
-
+                        FlatButton(
+                          child: const Text('change position of all tracker'),
+                          onPressed: () => _updateAllTrackerPosition(getTrackerList()),
+                        ),
                       ],
                     ),
                   ],
@@ -299,5 +428,47 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
         ),
       ],
     );
+  }
+}
+
+class Tracker {
+  int id;
+  String iconImage = "poi";
+  String color;
+  LatLng coordinates;
+
+  Tracker(int trackerId, LatLng coordinates, String color) {
+    this.id = trackerId;
+    this.coordinates = coordinates;
+    this.color = color;
+  }
+}
+
+class Route {
+  int id;
+  String color;
+  List<LatLng> coordinates;
+
+  Route(int lineId, List<LatLng> coordinates, String color) {
+    this.id = lineId;
+    this.coordinates = coordinates;
+    this.color = color;
+  }
+
+}
+
+class Event {
+  int id;
+  String color;
+  String icon;
+  LatLng coordinate;
+  int trackerId;
+
+  Event(int eventId, String eventColor, String eventIcon, LatLng eventCoordinate, int trackerId) {
+    this.id = eventId;
+    this.color = eventColor;
+    this.trackerId = trackerId;
+    this.coordinate = eventCoordinate;
+    this.icon = eventIcon;
   }
 }
