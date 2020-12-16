@@ -16,12 +16,12 @@ import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager;
 /**
  * Controller of a single Symbol on the map.
  */
-class SymbolController implements SymbolOptionsSink {
+public class SymbolController implements SymbolOptionsSink {
   private final Symbol symbol;
   private final OnSymbolTappedListener onTappedListener;
   private boolean consumeTapEvents;
 
-  SymbolController(Symbol symbol, boolean consumeTapEvents, OnSymbolTappedListener onTappedListener) {
+  public SymbolController(Symbol symbol, boolean consumeTapEvents, OnSymbolTappedListener onTappedListener) {
     this.symbol = symbol;
     this.consumeTapEvents = consumeTapEvents;
     this.onTappedListener = onTappedListener;

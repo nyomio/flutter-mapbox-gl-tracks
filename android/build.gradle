@@ -2,13 +2,15 @@ group 'com.mapbox.mapboxgl'
 version '1.0-SNAPSHOT'
 
 buildscript {
+    ext.kotlin_version = '1.4.21'
     repositories {
         google()
         jcenter()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath 'com.android.tools.build:gradle:4.1.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
@@ -21,9 +23,10 @@ rootProject.allprojects {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 30
 
     defaultConfig {
         minSdkVersion 20
@@ -40,9 +43,22 @@ android {
         implementation "com.mapbox.mapboxsdk:mapbox-android-sdk:9.2.0"
         implementation "com.mapbox.mapboxsdk:mapbox-android-plugin-annotation-v9:0.9.0"
         implementation "com.mapbox.mapboxsdk:mapbox-android-plugin-localization-v9:0.12.0"
+        implementation 'com.google.code.gson:gson:2.8.6'
+        //Imageloader
+        implementation("io.coil-kt:coil:0.12.0")
     }
+    buildToolsVersion '30.0.2'
     compileOptions {
         sourceCompatibility 1.8
         targetCompatibility 1.8
     }
+}
+repositories {
+    mavenCentral()
+}
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.google.android.gms:play-services-location:17.1.0'
+    implementation "androidx.appcompat:appcompat-resources:1.2.0"
+    implementation "androidx.appcompat:appcompat:1.2.0"
 }

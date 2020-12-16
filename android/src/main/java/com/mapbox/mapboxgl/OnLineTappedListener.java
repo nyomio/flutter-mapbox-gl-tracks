@@ -6,6 +6,6 @@ package com.mapbox.mapboxgl;
 
 import com.mapbox.mapboxsdk.plugins.annotation.Line;
 
-interface OnLineTappedListener {
+public interface OnLineTappedListener {
   void onLineTapped(Line line);
 }

@@ -96,7 +96,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     );
     if (availableNumbers.isNotEmpty) {
       controller.addSymbol(
-        _getSymbolOptions(iconImage, availableNumbers.first),
+        _getSymbolOptions(iconImage, availableNumbers.first, '#ff0000'),
         {'count': availableNumbers.first}
       );
       setState(() {
@@ -105,7 +105,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     }
   }
 
-  SymbolOptions _getSymbolOptions(String iconImage, int symbolCount){
+  SymbolOptions _getSymbolOptions(String iconImage, int symbolCount, String iconColor){
     LatLng geometry = LatLng(
       center.latitude + sin(symbolCount * pi / 6.0) / 20.0,
       center.longitude + cos(symbolCount * pi / 6.0) / 20.0,
@@ -127,6 +127,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
         : SymbolOptions(
             geometry: geometry,
             iconImage: iconImage,
+            iconColor: iconColor,
           );
   }
 
@@ -138,7 +139,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     
     if (symbolsToAddNumbers.isNotEmpty) {
       final List<SymbolOptions> symbolOptionsList = symbolsToAddNumbers.map(
-        (i) => _getSymbolOptions(iconImage, i)
+        (i) => _getSymbolOptions(iconImage, i, (i % 2 == 0) ? '#ff0000' : '#0000ff')
       ).toList();
       controller.addSymbols(
         symbolOptionsList,
@@ -150,6 +151,91 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
       });
     }
   }
+  Future<void> _addAllTracker(String iconImage, String iconColor) async {
+    List<int> symbolsToAddNumbers = Iterable<int>.generate(12).toList();
+    controller.symbols.forEach(
+            (s) => symbolsToAddNumbers.removeWhere((i) => i == s.data['count'])
+    );
+
+    if (symbolsToAddNumbers.isNotEmpty) {
+      final List<SymbolOptions> symbolOptionsList = symbolsToAddNumbers.map(
+              (i) => _getSymbolOptions(iconImage, i, iconColor)
+      ).toList();
+      controller.addSymbols(
+          symbolOptionsList,
+          symbolsToAddNumbers.map((i) => {'count': i}).toList()
+      );
+
+      setState(() {
+        _symbolCount += symbolOptionsList.length;
+      });
+    }
+  }
+  void _removeTracker(Symbol symbol) {
+    _selectedSymbol = symbol;
+    controller.removeSymbol(_selectedSymbol);
+    setState(() {
+      _selectedSymbol = null;
+      _symbolCount -= 1;
+    });
+  }
+  void _removeAllTracker() {
+    controller.removeSymbols(controller.symbols);
+    setState(() {
+      _selectedSymbol = null;
+      _symbolCount = 0;
+    });
+  }
+  void _changeTrackerPosition(Symbol symbol, LatLng newCoordinate) {
+    _selectedSymbol = symbol;
+    _updateSelectedTracker(
+      SymbolOptions(
+        geometry: LatLng(
+          newCoordinate.latitude,
+          newCoordinate.longitude,
+        ),
+      ),
+    );
+  }
+  void _updateSelectedTracker(SymbolOptions changes) {
+    controller.updateSymbol(_selectedSymbol, changes);
+  }
+  Future<void> _hideAllTrackerIf(bool condition) async {
+    controller.symbols.forEach((element) {
+      if (condition) {
+        _updateSelectedTracker(
+          SymbolOptions(iconOpacity: 0.0),
+        );
+      }
+    });
+  }
+
+  Future<void> _hideAllTracker() async {
+    controller.symbols.forEach((element) {
+       _updateSelectedTracker(
+         SymbolOptions(iconOpacity: 0.0),
+       );
+    });
+  }
+
+  Future<void> _showAllTrackerIf(bool condition) async {
+    controller.symbols.forEach((element) {
+      if (condition) {
+        _updateSelectedTracker(
+          SymbolOptions(iconOpacity: 1.0),
+        );
+      }
+    });
+  }
+
+  Future<void> _showAllTracker() async {
+    controller.symbols.forEach((element) {
+      _updateSelectedTracker(
+        SymbolOptions(iconOpacity: 1.0),
+      );
+    });
+  }
+
 
   void _remove() {
     controller.removeSymbol(_selectedSymbol);
@@ -263,7 +349,7 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
     );
   }
 
-   void _getLatLng() async {
+  void _getLatLng() async {
     LatLng latLng = await controller.getSymbolLatLng(_selectedSymbol);
     Scaffold.of(context).showSnackBar(
       SnackBar(

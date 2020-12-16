@@ -6,6 +6,6 @@ package com.mapbox.mapboxgl;
 
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol;
 
-interface OnSymbolTappedListener {
+public interface OnSymbolTappedListener {
   void onSymbolTapped(Symbol symbol);
 }

@@ -21,7 +21,7 @@ import com.mapbox.mapboxsdk.utils.ColorUtils;
 /**
  * Controller of a single Line on the map.
  */
-class LineController implements LineOptionsSink {
+public class LineController implements LineOptionsSink {
   private final Line line;
   private final OnLineTappedListener onTappedListener;
   private boolean consumeTapEvents;

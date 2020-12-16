@@ -6,7 +6,7 @@ package com.mapbox.mapboxgl;
 
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 
-interface OnCameraMoveListener {
+public interface OnCameraMoveListener {
   void onCameraMoveStarted(boolean isGesture);
 
   void onCameraMove(CameraPosition newPosition);

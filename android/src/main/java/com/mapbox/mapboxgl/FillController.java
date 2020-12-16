@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * Controller of a single Fill on the map.
  */
-class FillController implements FillOptionsSink {
+public class FillController implements FillOptionsSink {
   private final Fill fill;
   private final OnFillTappedListener onTappedListener;
   private boolean consumeTapEvents;

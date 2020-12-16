@@ -13,7 +13,7 @@ import com.mapbox.mapboxsdk.plugins.annotation.Line;
 import com.mapbox.mapboxsdk.plugins.annotation.LineManager;
 import com.mapbox.mapboxsdk.plugins.annotation.LineOptions;
 
-class LineBuilder implements LineOptionsSink {
+public class LineBuilder implements LineOptionsSink {
   private final LineManager lineManager;
   private final LineOptions lineOptions;
 

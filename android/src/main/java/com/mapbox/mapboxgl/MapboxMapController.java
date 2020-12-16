@@ -36,6 +36,7 @@ import com.mapbox.android.core.location.LocationEngineProvider;
 import com.mapbox.android.core.location.LocationEngineResult;
 import com.mapbox.android.telemetry.TelemetryEnabler;
 import com.mapbox.geojson.Feature;
+import com.mapbox.mapboxgl.nyomio.components.MethodChannelEventsKt;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdate;
@@ -80,12 +81,6 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.mapbox.mapboxgl.MapboxMapsPlugin.CREATED;
-import static com.mapbox.mapboxgl.MapboxMapsPlugin.DESTROYED;
-import static com.mapbox.mapboxgl.MapboxMapsPlugin.PAUSED;
-import static com.mapbox.mapboxgl.MapboxMapsPlugin.RESUMED;
-import static com.mapbox.mapboxgl.MapboxMapsPlugin.STARTED;
-import static com.mapbox.mapboxgl.MapboxMapsPlugin.STOPPED;
 
 import com.mapbox.mapboxsdk.plugins.localization.LocalizationPlugin;
 import com.mapbox.mapboxsdk.style.layers.RasterLayer;
@@ -94,7 +89,7 @@ import com.mapbox.mapboxsdk.style.sources.ImageSource;
 /**
  * Controller of a single MapboxMaps MapView instance.
  */
-final class MapboxMapController
+public class MapboxMapController
   implements Application.ActivityLifecycleCallbacks,
   MapboxMap.OnCameraIdleListener,
   MapboxMap.OnCameraMoveListener,
@@ -114,15 +109,15 @@ final class MapboxMapController
   private static final String TAG = "MapboxMapController";
   private final int id;
   private final AtomicInteger activityState;
-  private final MethodChannel methodChannel;
-  private final PluginRegistry.Registrar registrar;
+  public final MethodChannel methodChannel;
+  public final PluginRegistry.Registrar registrar;
   private final MapView mapView;
-  private MapboxMap mapboxMap;
-  private final Map<String, SymbolController> symbols;
+  public MapboxMap mapboxMap;
+  public final Map<String, SymbolController> symbols;
   private final Map<String, LineController> lines;
   private final Map<String, CircleController> circles;
   private final Map<String, FillController> fills;
-  private SymbolManager symbolManager;
+  public SymbolManager symbolManager;
   private LineManager lineManager;
   private CircleManager circleManager;
   private FillManager fillManager;
@@ -150,7 +145,7 @@ final class MapboxMapController
     MapboxMapOptions options,
     String accessToken,
     String styleStringInitial) {
-    Mapbox.getInstance(context, accessToken!=null ? accessToken : getAccessToken(context));
+    Mapbox.getInstance(context, "pk.eyJ1IjoibmFneWlzdHZhbiIsImEiOiJja2lxczJ0dXgxenJjMzFxajVmamJxdGJiIn0.R1muCmqEhEJLAzGPMhcC2A"/*accessToken!=null ? accessToken : getAccessToken(context)*/);
     this.id = id;
     this.context = context;
     this.activityState = activityState;
@@ -192,32 +187,32 @@ final class MapboxMapController
 
   void init() {
     switch (activityState.get()) {
-      case STOPPED:
+      case MapboxMapsPlugin.STOPPED:
         mapView.onCreate(null);
         mapView.onStart();
         mapView.onResume();
         mapView.onPause();
         mapView.onStop();
         break;
-      case PAUSED:
+      case MapboxMapsPlugin.PAUSED:
         mapView.onCreate(null);
         mapView.onStart();
         mapView.onResume();
         mapView.onPause();
         break;
-      case RESUMED:
+      case MapboxMapsPlugin.RESUMED:
         mapView.onCreate(null);
         mapView.onStart();
         mapView.onResume();
         break;
-      case STARTED:
+      case MapboxMapsPlugin.STARTED:
         mapView.onCreate(null);
         mapView.onStart();
         break;
-      case CREATED:
+      case MapboxMapsPlugin.CREATED:
         mapView.onCreate(null);
         break;
-      case DESTROYED:
+      case MapboxMapsPlugin.DESTROYED:
         mapboxMap.removeOnCameraIdleListener(this);
         mapboxMap.removeOnCameraMoveStartedListener(this);
         mapboxMap.removeOnCameraMoveListener(this);
@@ -243,7 +238,7 @@ final class MapboxMapController
     return trackCameraPosition ? mapboxMap.getCameraPosition() : null;
   }
 
-  private SymbolController symbol(String symbolId) {
+  public SymbolController symbol(String symbolId) {
     final SymbolController symbol = symbols.get(symbolId);
     if (symbol == null) {
       throw new IllegalArgumentException("Unknown symbol: " + symbolId);
@@ -405,7 +400,11 @@ final class MapboxMapController
     userLocation.put("altitude", location.getAltitude());
     userLocation.put("bearing", location.getBearing());
     userLocation.put("horizontalAccuracy", location.getAccuracy());
-    userLocation.put("verticalAccuracy", (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? location.getVerticalAccuracyMeters() : null);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        userLocation.put("verticalAccuracy", (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? location.getVerticalAccuracyMeters() : null);
+    }
+    else
+        userLocation.put("verticalAccuracy", null);
     userLocation.put("timestamp", location.getTime());
 
     final Map<String, Object> arguments = new HashMap<>(1);
@@ -814,7 +813,7 @@ final class MapboxMapController
         Log.e(TAG, "location component: getLastLocation");
         if (this.myLocationEnabled && locationComponent != null && locationEngine != null) {
           Map<String, Object> reply = new HashMap<>();
-          locationEngine.getLastLocation(new LocationEngineCallback<LocationEngineResult>() {
+         /* locationEngine.getLastLocation(new LocationEngineCallback<LocationEngineResult>() {
             @Override
             public void onSuccess(LocationEngineResult locationEngineResult) {
               Location lastLocation = locationEngineResult.getLastLocation();
@@ -832,7 +831,7 @@ final class MapboxMapController
             public void onFailure(@NonNull Exception exception) {
               result.error("", "", null); // ???
             }
-          });
+          });*/
         }
         break;
       }
@@ -878,7 +877,11 @@ final class MapboxMapController
         break;
       }
       default:
-        result.notImplemented();
+        /** handleNyomioRequests
+         * Ha mergeljük az eredetit ezt a sort mindenképp ki kell cserélni, itt vezetjük át a methodokat a sajátjainkba
+         */
+        MethodChannelEventsKt.handleNyomioRequests(this,call,result);
+
     }
   }
 
@@ -1012,7 +1015,7 @@ final class MapboxMapController
     }
     disposed = true;
     if (locationComponent != null) {
-      locationComponent.setLocationComponentEnabled(false);
+      /*locationComponent.setLocationComponentEnabled(false);*/
     }
     if (symbolManager != null) {
       symbolManager.onDestroy();
@@ -1221,7 +1224,7 @@ final class MapboxMapController
   }
 
   private void updateMyLocationEnabled() {
-    if(this.locationComponent == null && myLocationEnabled){
+  /*  if(this.locationComponent == null && myLocationEnabled){
       enableLocationComponent(mapboxMap.getStyle());
     }
 
@@ -1231,11 +1234,11 @@ final class MapboxMapController
       stopListeningForLocationUpdates();
     }
 
-    locationComponent.setLocationComponentEnabled(myLocationEnabled);
+    locationComponent.setLocationComponentEnabled(myLocationEnabled);*/
   }
 
   private void startListeningForLocationUpdates(){
-    if(locationEngineCallback == null && locationComponent!=null && locationComponent.getLocationEngine()!=null){
+   /* if(locationEngineCallback == null && locationComponent!=null && locationComponent.getLocationEngine()!=null){
       locationEngineCallback = new LocationEngineCallback<LocationEngineResult>() {
         @Override
         public void onSuccess(LocationEngineResult result) {
@@ -1247,7 +1250,7 @@ final class MapboxMapController
         }
       };
       locationComponent.getLocationEngine().requestLocationUpdates(locationComponent.getLocationEngineRequest(), locationEngineCallback , null);
-    }
+    }*/
   }
 
   private void stopListeningForLocationUpdates(){

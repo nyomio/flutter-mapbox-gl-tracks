@@ -11,7 +11,7 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 import java.util.List;
 
 /** Receiver of Fill configuration options. */
-interface FillOptionsSink {
+public interface FillOptionsSink {
           
   void setFillOpacity(float fillOpacity);
           

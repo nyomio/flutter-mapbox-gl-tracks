@@ -12,11 +12,11 @@ import com.mapbox.mapboxsdk.plugins.annotation.Symbol;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions;
 
-class SymbolBuilder implements SymbolOptionsSink {
+public class SymbolBuilder implements SymbolOptionsSink {
   private final SymbolOptions symbolOptions;
   private static boolean customImage;
 
-  SymbolBuilder() {
+  public SymbolBuilder() {
     this.symbolOptions = new SymbolOptions();
   }
 

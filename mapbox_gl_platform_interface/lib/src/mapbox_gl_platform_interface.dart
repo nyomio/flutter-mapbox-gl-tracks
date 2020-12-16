@@ -120,15 +120,21 @@ abstract class MapboxGlPlatform {
   Future<List<Symbol>> addSymbols(List<SymbolOptions> options, [List<Map> data]) async {
     throw UnimplementedError('addSymbols() has not been implemented.');
   }
-
+  Future<List<Symbol>> addTrackers(List<SymbolOptions> options, [List<Map> data]) async {
+    throw UnimplementedError('addTrackers() has not been implemented.');
+  }
   Future<void> updateSymbol(Symbol symbol, SymbolOptions changes) async {
     throw UnimplementedError('updateSymbol() has not been implemented.');
   }
-
+  Future<void> updateTracker(Symbol symbol, SymbolOptions changes) async {
+    throw UnimplementedError('updateTracker() has not been implemented.');
+  }
   Future<void> removeSymbols(Iterable<String> symbolsIds) async {
     throw UnimplementedError('removeSymbol() has not been implemented.');
   }
-
+  Future<void> removeTrackers(Iterable<String> symbolsIds) async {
+    throw UnimplementedError('removeTrackers() has not been implemented.');
+  }
   Future<Line> addLine(LineOptions options, [Map data]) async {
     throw UnimplementedError('addLine() has not been implemented.');
   }
@@ -156,7 +162,9 @@ abstract class MapboxGlPlatform {
   Future<LatLng> getSymbolLatLng(Symbol symbol) async {
     throw UnimplementedError('getSymbolLatLng() has not been implemented.');
   }
-
+  Future<LatLng> getTrackerLatLng(Symbol symbol) async {
+    throw UnimplementedError('getTrackerLatLng() has not been implemented.');
+  }
   Future<List<LatLng>> getLineLatLngs(Line line) async {
     throw UnimplementedError('getLineLatLngs() has not been implemented.');
   }

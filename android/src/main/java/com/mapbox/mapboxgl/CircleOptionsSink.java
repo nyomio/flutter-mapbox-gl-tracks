@@ -9,7 +9,7 @@ package com.mapbox.mapboxgl;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 
 /** Receiver of Circle configuration options. */
-interface CircleOptionsSink {
+public interface CircleOptionsSink {
       
   void setCircleRadius(float circleRadius);
           

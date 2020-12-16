@@ -6,6 +6,6 @@ package com.mapbox.mapboxgl;
 
 import com.mapbox.mapboxsdk.plugins.annotation.Circle;
 
-interface OnCircleTappedListener {
+public interface OnCircleTappedListener {
   void onCircleTapped(Circle circle);
 }

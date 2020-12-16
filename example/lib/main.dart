@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:mapbox_gl_example/full_map.dart';
+import 'package:mapbox_gl_example/tracker_symbol.dart';
 
 import 'animate_camera.dart';
 import 'full_map.dart';
@@ -20,7 +21,7 @@ import 'place_fill.dart';
 import 'scrolling_map.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
-  MapUiPage(),
+  TrackerSymbolPage(),
   FullMapPage(),
   AnimateCameraPage(),
   MoveCameraPage(),

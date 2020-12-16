@@ -18,7 +18,7 @@ import io.flutter.plugin.common.PluginRegistry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-class MapboxMapBuilder implements MapboxMapOptionsSink {
+public class MapboxMapBuilder implements MapboxMapOptionsSink {
   public final String TAG = getClass().getSimpleName();
   private final MapboxMapOptions options = new MapboxMapOptions()
     .textureMode(true)

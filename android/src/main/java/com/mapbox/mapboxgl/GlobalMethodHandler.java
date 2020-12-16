@@ -18,7 +18,7 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.PluginRegistry;
 
-class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
+public class GlobalMethodHandler implements MethodChannel.MethodCallHandler {
     private static final String TAG = GlobalMethodHandler.class.getSimpleName();
     private static final String DATABASE_NAME = "mbgl-offline.db";
     private static final int BUFFER_SIZE = 1024 * 2;

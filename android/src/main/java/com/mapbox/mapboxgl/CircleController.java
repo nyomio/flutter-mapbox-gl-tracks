@@ -13,7 +13,7 @@ import com.mapbox.mapboxsdk.plugins.annotation.Circle;
 import com.mapbox.mapboxsdk.plugins.annotation.CircleManager;
 
 /** Controller of a single Circle on the map. */
-class CircleController implements CircleOptionsSink {
+public class CircleController implements CircleOptionsSink {
   private final Circle circle;
   private final OnCircleTappedListener onTappedListener;
   private boolean consumeTapEvents;

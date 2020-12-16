@@ -12,7 +12,7 @@ import com.mapbox.mapboxsdk.plugins.annotation.Circle;
 import com.mapbox.mapboxsdk.plugins.annotation.CircleManager;
 import com.mapbox.mapboxsdk.plugins.annotation.CircleOptions;
 
-class CircleBuilder implements CircleOptionsSink {
+public class CircleBuilder implements CircleOptionsSink {
   private final CircleManager circleManager;
   private final CircleOptions circleOptions;
 

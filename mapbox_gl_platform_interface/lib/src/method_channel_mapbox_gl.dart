@@ -202,6 +202,53 @@ class MethodChannelMapboxGl extends MapboxGlPlatform {
   }
 
   @override
+  Future<List<Symbol>> addTrackers(List<SymbolOptions> options,
+      [List<Map> data]) async {
+    final List<dynamic> symbolIds = await _channel.invokeMethod(
+      'tracker#addAll',
+      <String, dynamic>{
+        'options': options.map((o) => o.toJson()).toList(),
+      },
+    );
+    final List<Symbol> symbols = symbolIds
+        .asMap()
+        .map((i, id) => MapEntry(
+        i,
+        Symbol(id, options.elementAt(i),
+            data != null && data.length > i ? data.elementAt(i) : null)))
+        .values
+        .toList();
+
+    return symbols;
+  }
+
+  @override
+  Future<void> updateTracker(Symbol symbol, SymbolOptions changes) async {
+    await _channel.invokeMethod('tracker#update', <String, dynamic>{
+      'symbol': symbol.id,
+      'options': changes.toJson(),
+    });
+  }
+
+  @override
+  Future<LatLng> getTrackerLatLng(Symbol symbol) async {
+    Map mapLatLng =
+    await _channel.invokeMethod('tracker#getGeometry', <String, dynamic>{
+      'symbol': symbol._id,
+    });
+    LatLng symbolLatLng =
+    new LatLng(mapLatLng['latitude'], mapLatLng['longitude']);
+    return symbolLatLng;
+  }
+
+  @override
+  Future<void> removeTrackers(Iterable<String> ids) async {
+    await _channel.invokeMethod('symbols#removeAll', <String, dynamic>{
+      'symbols': ids.toList(),
+    });
+  }
+
+  @override
   Future<List<Symbol>> addSymbols(List<SymbolOptions> options,
       [List<Map> data]) async {
     final List<dynamic> symbolIds = await _channel.invokeMethod(

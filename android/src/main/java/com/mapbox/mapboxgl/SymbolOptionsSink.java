@@ -11,7 +11,7 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 /**
  * Receiver of Symbol configuration options.
  */
-interface SymbolOptionsSink {
+public interface SymbolOptionsSink {
 
   void setIconSize(float iconSize);
 

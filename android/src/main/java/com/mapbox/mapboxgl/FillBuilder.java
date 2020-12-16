@@ -13,7 +13,7 @@ import com.mapbox.mapboxsdk.plugins.annotation.FillOptions;
 
 import java.util.List;
 
-class FillBuilder implements FillOptionsSink {
+public class FillBuilder implements FillOptionsSink {
   private final FillManager fillManager;
   private final FillOptions fillOptions;
 

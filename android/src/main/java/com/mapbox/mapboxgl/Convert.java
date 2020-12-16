@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * Conversions between JSON-like values and MapboxMaps data types.
  */
-class Convert {
+public class Convert {
 
   private final static String TAG = "Convert";
 
@@ -222,7 +222,7 @@ class Convert {
     return (String) o;
   }
 
-  static void interpretMapboxMapOptions(Object o, MapboxMapOptionsSink sink) {
+  public  static void interpretMapboxMapOptions(Object o, MapboxMapOptionsSink sink) {
     final Map<?, ?> data = toMap(o);
     final Object cameraTargetBounds = data.get("cameraTargetBounds");
     if (cameraTargetBounds != null) {
@@ -297,7 +297,7 @@ class Convert {
     }
   }
 
-  static void interpretSymbolOptions(Object o, SymbolOptionsSink sink) {
+  public static void interpretSymbolOptions(Object o, SymbolOptionsSink sink) {
     final Map<?, ?> data = toMap(o);
     final Object iconSize = data.get("iconSize");
     if (iconSize != null) {
