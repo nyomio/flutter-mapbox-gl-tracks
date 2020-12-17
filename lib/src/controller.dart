@@ -354,11 +354,7 @@ class MapboxMapController extends ChangeNotifier {
 
     return result.first;
   }
-  Future<Symbol> addTracker(SymbolOptions options, [Map data]) async {
-    List<Symbol> result = await addTrackers([options], [data]);
 
-    return result.first;
-  }
   Future<List<Symbol>> addSymbols(List<SymbolOptions> options,
       [List<Map> data]) async {
     final List<SymbolOptions> effectiveOptions =
@@ -370,17 +366,7 @@ class MapboxMapController extends ChangeNotifier {
     notifyListeners();
     return symbols;
   }
-  Future<List<Symbol>> addTrackers(List<SymbolOptions> options,
-      [List<Map> data]) async {
-    final List<SymbolOptions> effectiveOptions =
-    options.map((o) => SymbolOptions.defaultOptions.copyWith(o)).toList();
 
-    final symbols = await MapboxGlPlatform.getInstance(_id)
-        .addTrackers(effectiveOptions, data);
-    symbols.forEach((s) => _symbols[s.id] = s);
-    notifyListeners();
-    return symbols;
-  }
   /// Updates the specified [symbol] with the given [changes]. The symbol must
   /// be a current member of the [symbols] set.
   ///
@@ -397,14 +383,6 @@ class MapboxMapController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateTracker(Symbol symbol, SymbolOptions changes) async {
-    assert(symbol != null);
-    assert(_symbols[symbol.id] == symbol);
-    assert(changes != null);
-    await MapboxGlPlatform.getInstance(_id).updateTracker(symbol, changes);
-    symbol.options = symbol.options.copyWith(changes);
-    notifyListeners();
-  }
 
   /// Retrieves the current position of the symbol.
   /// This may be different from the value of `symbol.options.geometry` if the symbol is draggable.
@@ -417,14 +395,7 @@ class MapboxMapController extends ChangeNotifier {
     notifyListeners();
     return symbolLatLng;
   }
-  Future<LatLng> getTrackerLatLng(Symbol symbol) async {
-    assert(symbol != null);
-    assert(_symbols[symbol.id] == symbol);
-    final symbolLatLng =
-    await MapboxGlPlatform.getInstance(_id).getTrackerLatLng(symbol);
-    notifyListeners();
-    return symbolLatLng;
-  }
+
   /// Removes the specified [symbol] from the map. The symbol must be a current
   /// member of the [symbols] set.
   ///
@@ -438,25 +409,7 @@ class MapboxMapController extends ChangeNotifier {
     await _removeSymbols([symbol.id]);
     notifyListeners();
   }
-  Future<void> removeTracker(Symbol symbol) async {
-    assert(symbol != null);
-    assert(_symbols[symbol.id] == symbol);
-    await _removeTrackers([symbol.id]);
-    notifyListeners();
-  }
-  Future<void> removeTrackers(Iterable<Symbol> symbols) async {
-    assert(symbols.length > 0);
-    symbols.forEach((s) {
-      assert(_symbols[s.id] == s);
-    });
 
-    await _removeTrackers(symbols.map((s) => s.id));
-    notifyListeners();
-  }
-  Future<void> _removeTrackers(Iterable<String> ids) async {
-    await MapboxGlPlatform.getInstance(_id).removeTrackers(ids);
-    _symbols.removeWhere((k, s) => ids.contains(k));
-  }
   Future<void> removeSymbols(Iterable<Symbol> symbols) async {
     assert(symbols.length > 0);
     symbols.forEach((s) {
