@@ -6,9 +6,9 @@ import MapboxAnnotationExtension
 class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, MapboxMapOptionsSink, MGLAnnotationControllerDelegate {
     
     private var registrar: FlutterPluginRegistrar
-    private var channel: FlutterMethodChannel?
+    var channel: FlutterMethodChannel?
     
-    private var mapView: MGLMapView
+    var mapView: MGLMapView
     private var isMapReady = false
     private var mapReadyResult: FlutterResult?
     
@@ -27,11 +27,11 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
     }
     
     init(withFrame frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?, registrar: FlutterPluginRegistrar) {
-        if let args = args as? [String: Any] {
-            if let token = args["accessToken"] as? NSString{
-                MGLAccountManager.accessToken = token
-            }
-        }
+//        if let args = args as? [String: Any] {
+//            if let token = args["accessToken"] as? NSString{
+                MGLAccountManager.accessToken = "pk.eyJ1IjoibmFneWlzdHZhbiIsImEiOiJja2lxczJ0dXgxenJjMzFxajVmamJxdGJiIn0.R1muCmqEhEJLAzGPMhcC2A"
+//            }
+//        }
         mapView = MGLMapView(frame: frame)
         mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         self.registrar = registrar
