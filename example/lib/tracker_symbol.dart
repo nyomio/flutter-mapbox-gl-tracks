@@ -67,6 +67,7 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
 
   void _onStyleLoaded() {
       addImageFromAsset();
+      print("Ekkor töltött be a térkép");
   }
   Future<void> addImageFromAsset() async{
        final ByteData bytes = await rootBundle.load("assets/symbols/start.png");
