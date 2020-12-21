@@ -16,6 +16,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,6 +28,7 @@ import android.view.Gravity;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -85,6 +88,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.mapbox.mapboxsdk.plugins.localization.LocalizationPlugin;
 import com.mapbox.mapboxsdk.style.layers.RasterLayer;
 import com.mapbox.mapboxsdk.style.sources.ImageSource;
+import com.mapbox.mapboxsdk.utils.BitmapUtils;
 
 /**
  * Controller of a single MapboxMaps MapView instance.
@@ -320,6 +324,7 @@ public class MapboxMapController
       if (bitmap != null) {
         mapboxMap.getStyle().addImage(id, bitmap);
       }
+
     });
 
     setStyleString(styleStringInitial);
@@ -364,6 +369,16 @@ public class MapboxMapController
 	    localizationPlugin = new LocalizationPlugin(mapView, mapboxMap, style);
 
       methodChannel.invokeMethod("map#onStyleLoaded", null);
+      Drawable drawableStop = ResourcesCompat.getDrawable(context.getResources(), R.drawable.ic_stop, null);
+      Bitmap stopIcon = BitmapUtils.getBitmapFromDrawable(drawableStop);
+      Drawable drawableStart = ResourcesCompat.getDrawable(context.getResources(), R.drawable.ic_start, null);
+      Bitmap startIcon = BitmapUtils.getBitmapFromDrawable(drawableStart);
+      Drawable drawableMarker = ResourcesCompat.getDrawable(context.getResources(), R.drawable.ic_marker, null);
+      Bitmap markerIcon = BitmapUtils.getBitmapFromDrawable(drawableMarker);
+
+      mapboxMap.getStyle().addImage("stop_xml", Bitmap.createScaledBitmap(stopIcon,50,60,true));
+      mapboxMap.getStyle().addImage("start_xml", Bitmap.createScaledBitmap(startIcon,50,60,true));
+      mapboxMap.getStyle().addImage("marker_xml", Bitmap.createScaledBitmap(markerIcon,50,60,true));
     }
   };
 

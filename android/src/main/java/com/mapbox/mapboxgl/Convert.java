@@ -305,7 +305,28 @@ public class Convert {
     }
     final Object iconImage = data.get("iconImage");
     if (iconImage != null) {
-      sink.setIconImage(toString(iconImage));
+      switch (toString(iconImage)) {
+        case "stop": {
+          sink.setIconImage("stop_xml");
+          break;
+        }
+        case "start": {
+          sink.setIconImage("start_xml");
+          break;
+        }
+        case "poi": {
+          sink.setIconImage("marker_xml");
+          break;
+        }
+        case "error": {
+          sink.setIconImage("ic_error");
+          break;
+        }
+        default: {
+          sink.setIconImage(toString(iconImage));
+        }
+      }
+
     }
     final Object iconRotate = data.get("iconRotate");
     if (iconRotate != null) {
