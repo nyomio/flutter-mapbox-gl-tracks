@@ -3,28 +3,21 @@ import 'package:mapbox_gl/mapbox_gl.dart';
 class Trip {
   int id;
   String color;
-  List<TrackerEvent> events;
-  List<Coordinate> coordinates;
+  List<GpsLocation> coordinates;
 
-  Trip(int tripId, String tripColor, List<TrackerEvent> trackerEvents, List<Coordinate> tripCoordinates) {
+  Trip(int tripId, String tripColor, List<GpsLocation> tripCoordinates) {
     this.id = tripId;
     this.coordinates = tripCoordinates;
     this.color = tripColor;
-    this.events = trackerEvents;
   }
 }
 
-class Coordinate {
+class GpsLocation {
   double lat;
   double long;
-  int durationSec;
+  double heading;
+  double alt;
+  double speed;
   int time;
 }
 
-class TrackerEvent {
-  double lat;
-  double long;
-  int eventType;
-  int durationSec;
-  int time;
-}
