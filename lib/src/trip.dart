@@ -19,5 +19,14 @@ class GpsLocation {
   double alt;
   double speed;
   int time;
+
+  GpsLocation(double lat, double long, double heading, double alt, double speed, int time) {
+    this.lat = lat;
+    this.long = long;
+    this.heading = heading;
+    this.alt = alt;
+    this.speed = speed;
+    this.time = time;
+  }
 }
 
