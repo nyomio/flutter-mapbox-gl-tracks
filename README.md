@@ -1,5 +1,18 @@
 # Flutter Mapbox GL
 
+## iOS 
+
+- A main projektbe, ios oldalon fel kell venni az alábbi paramétereket az info.plistbe, mert különben crashelhet az alkalmazás.
+- A MapBox Gl plugin alapvetően használja a telefon lokációját
+```
+   <key>NSLocationWhenInUseUsageDescription</key>
+	<string>valami szöveg, hogy miért kéred</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>valami szöveg, hogy miért kéred</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>valami szöveg, hogy miért kéred</string>
+```
+
 ## Symbol
 
 - Ajánlott 3 féle méretű ikont felvenni a térképhez, az alábbi strukúrában:
