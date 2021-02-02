@@ -369,7 +369,7 @@ public class MapboxMapController
 	    localizationPlugin = new LocalizationPlugin(mapView, mapboxMap, style);
 
       methodChannel.invokeMethod("map#onStyleLoaded", null);
-      Drawable drawableStop = ResourcesCompat.getDrawable(context.getResources(), R.drawable.ic_stop, null);
+     /* Drawable drawableStop = ResourcesCompat.getDrawable(context.getResources(), R.drawable.ic_stop, null);
       Bitmap stopIcon = BitmapUtils.getBitmapFromDrawable(drawableStop);
       Drawable drawableStart = ResourcesCompat.getDrawable(context.getResources(), R.drawable.ic_start, null);
       Bitmap startIcon = BitmapUtils.getBitmapFromDrawable(drawableStart);
@@ -378,7 +378,7 @@ public class MapboxMapController
 
       mapboxMap.getStyle().addImage("stop_xml", Bitmap.createScaledBitmap(stopIcon,50,60,true));
       mapboxMap.getStyle().addImage("start_xml", Bitmap.createScaledBitmap(startIcon,50,60,true));
-      mapboxMap.getStyle().addImage("marker_xml", Bitmap.createScaledBitmap(markerIcon,50,60,true));
+      mapboxMap.getStyle().addImage("marker_xml", Bitmap.createScaledBitmap(markerIcon,50,60,true));*/
     }
   };
 

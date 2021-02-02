@@ -10,14 +10,14 @@ import 'package:mapbox_gl/src/trip.dart';
 // ignore: must_be_immutable
 class MapWithTrip extends StatefulWidget {
 
-  Trip tripData;
+  List<Trip> tripData;
   String accessToken;
   String startIconPath;
   String endIconPath;
   Function(GpsLocation) tripPressCallback;
   Function() onStyleLoaded;
 
-  MapWithTrip(Trip trip, String token, String startIconPath, String endIconPath, Function(GpsLocation) callback, Function() styleLoaded) {
+  MapWithTrip(List<Trip> trip, String token, String startIconPath, String endIconPath, Function(GpsLocation) callback, Function() styleLoaded) {
     this.tripData = trip;
     this.accessToken = token;
     this.tripPressCallback = callback;
@@ -33,14 +33,14 @@ class MapWithTrip extends StatefulWidget {
 
 class MapWithTripState extends State<MapWithTrip> {
 
-  Trip tripData;
+  List<Trip> tripData;
   String accessToken;
   String startIconPath;
   String endIconPath;
   Function(GpsLocation) tripPressCallback;
   Function() onStyleLoaded;
 
-  MapWithTripState(Trip trip, String token, String startIconPath, String endIconPath, Function(GpsLocation) callback, Function() styleLoaded) {
+  MapWithTripState(List<Trip> trip, String token, String startIconPath, String endIconPath, Function(GpsLocation) callback, Function() styleLoaded) {
     this.tripData = trip;
     this.accessToken = token;
     this.tripPressCallback = callback;
@@ -115,7 +115,7 @@ class MapWithTripState extends State<MapWithTrip> {
    * If I click on the map it returns the coordinate of the nearest route, if it is more than 20 meters away it returns the coordinate of the point where we clicked
    */
   void _onMapClicked(Point<double> point, LatLng latLng) {
-    double minDistance = 100000.0;
+   /* double minDistance = 100000.0;
     GpsLocation selectedGpsLocation;
     this.tripData.coordinates.forEach((element) {
       double distance = calculateDistance(element.lat, element.long, latLng.latitude, latLng.longitude);
@@ -126,9 +126,9 @@ class MapWithTripState extends State<MapWithTrip> {
     if (minDistance < 20.0) {
       tripPressCallback(selectedGpsLocation);
     }
-    else {
+    else {*/
       tripPressCallback(GpsLocation(latLng.latitude,latLng.longitude,0.0,0.0,0.0,0));
-    }
+    /*}*/
   }
 
   void _updateSelectedLine(LineOptions changes) {
@@ -140,22 +140,27 @@ class MapWithTripState extends State<MapWithTrip> {
    */
   void onStyleLoadedCallback() {
     addImageFromAsset();
-    List<LatLng> geometry = [];
-    tripData.coordinates.sort((a, b) => a.time.compareTo(b.time));
-    tripData.coordinates.forEach((element) {
-      geometry.add(LatLng(element.lat,element.long));
-    });
-    controller.addLine(
-      LineOptions(
-        geometry: geometry,
-        lineColor: tripData.color,
-        lineWidth: 5.0,
-        lineOpacity: 0.5,
-      ),
-    );
+    tripData.forEach((trip) {
+      if (trip.coordinates.length > 1) {
+        List<LatLng> geometry = [];
+        trip.coordinates.sort((a, b) => a.time.compareTo(b.time));
+        trip.coordinates.forEach((element) {
+          geometry.add(LatLng(element.lat, element.long));
+        });
+        controller.addLine(
+          LineOptions(
+            geometry: geometry,
+            lineColor: trip.color,
+            lineWidth: 5.0,
+            lineOpacity: 0.5,
+          ),
+        );
 
-    _addEvent(tripData.coordinates.first, "start");
-    _addEvent(tripData.coordinates.last, "stop");
+        _addEvent(trip.coordinates.first, "start");
+        _addEvent(trip.coordinates.last, "stop");
+      }
+    });
+
     onStyleLoaded();
   }
 
@@ -222,7 +227,7 @@ class MapWithTripState extends State<MapWithTrip> {
       onStyleLoadedCallback: onStyleLoadedCallback,
       onMapClick: _onMapClicked,
       initialCameraPosition: CameraPosition(
-        target: LatLng(tripData.coordinates.first.lat,tripData.coordinates.first.long),
+        target: LatLng(tripData.lastWhere((element) => element.coordinates.length > 1).coordinates.first.lat,tripData.lastWhere((element) => element.coordinates.length > 1).coordinates.first.long),
         zoom: 11.0,
       ),
     );
