@@ -1,4 +1,3 @@
-import 'package:mapbox_gl/mapbox_gl.dart';
 
 class Trip {
   final int id;

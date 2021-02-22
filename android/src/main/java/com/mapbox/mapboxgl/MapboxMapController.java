@@ -94,22 +94,22 @@ import com.mapbox.mapboxsdk.utils.BitmapUtils;
  * Controller of a single MapboxMaps MapView instance.
  */
 public class MapboxMapController
-  implements Application.ActivityLifecycleCallbacks,
-  MapboxMap.OnCameraIdleListener,
-  MapboxMap.OnCameraMoveListener,
-  MapboxMap.OnCameraMoveStartedListener,
-  OnAnnotationClickListener,
-  MapboxMap.OnMapClickListener,
-  MapboxMap.OnMapLongClickListener,
-  MapboxMapOptionsSink,
-  MethodChannel.MethodCallHandler,
-  OnMapReadyCallback,
-  OnCameraTrackingChangedListener,
-  OnSymbolTappedListener,
-  OnLineTappedListener,
-  OnCircleTappedListener,
-  OnFillTappedListener,
-  PlatformView {
+        implements Application.ActivityLifecycleCallbacks,
+        MapboxMap.OnCameraIdleListener,
+        MapboxMap.OnCameraMoveListener,
+        MapboxMap.OnCameraMoveStartedListener,
+        OnAnnotationClickListener,
+        MapboxMap.OnMapClickListener,
+        MapboxMap.OnMapLongClickListener,
+        MapboxMapOptionsSink,
+        MethodChannel.MethodCallHandler,
+        OnMapReadyCallback,
+        OnCameraTrackingChangedListener,
+        OnSymbolTappedListener,
+        OnLineTappedListener,
+        OnCircleTappedListener,
+        OnFillTappedListener,
+        PlatformView {
   private static final String TAG = "MapboxMapController";
   private final int id;
   private final AtomicInteger activityState;
@@ -142,13 +142,13 @@ public class MapboxMapController
   private Style style;
 
   MapboxMapController(
-    int id,
-    Context context,
-    AtomicInteger activityState,
-    PluginRegistry.Registrar registrar,
-    MapboxMapOptions options,
-    String accessToken,
-    String styleStringInitial) {
+          int id,
+          Context context,
+          AtomicInteger activityState,
+          PluginRegistry.Registrar registrar,
+          MapboxMapOptions options,
+          String accessToken,
+          String styleStringInitial) {
     Mapbox.getInstance(context, "pk.eyJ1IjoibmFneWlzdHZhbiIsImEiOiJja2lxczJ0dXgxenJjMzFxajVmamJxdGJiIn0.R1muCmqEhEJLAzGPMhcC2A"/*accessToken!=null ? accessToken : getAccessToken(context)*/);
     this.id = id;
     this.context = context;
@@ -162,7 +162,7 @@ public class MapboxMapController
     this.fills = new HashMap<>();
     this.density = context.getResources().getDisplayMetrics().density;
     methodChannel =
-      new MethodChannel(registrar.messenger(), "plugins.flutter.io/mapbox_maps_" + id);
+            new MethodChannel(registrar.messenger(), "plugins.flutter.io/mapbox_maps_" + id);
     methodChannel.setMethodCallHandler(this);
     this.registrarActivityHashCode = registrar.activity().hashCode();
   }
@@ -178,8 +178,8 @@ public class MapboxMapController
       return token;
     } catch (Exception e) {
       Log.e(TAG, "Failed to find an Access Token in the Application meta-data. Maps may not load correctly. " +
-        "Please refer to the installation guide at https://github.com/tobrun/flutter-mapbox-gl#mapbox-access-token " +
-        "for troubleshooting advice." + e.getMessage());
+              "Please refer to the installation guide at https://github.com/tobrun/flutter-mapbox-gl#mapbox-access-token " +
+              "for troubleshooting advice." + e.getMessage());
     }
     return null;
   }
@@ -224,7 +224,7 @@ public class MapboxMapController
         break;
       default:
         throw new IllegalArgumentException(
-          "Cannot interpret " + activityState.get() + " as an activity state");
+                "Cannot interpret " + activityState.get() + " as an activity state");
     }
     registrar.activity().getApplication().registerActivityLifecycleCallbacks(this);
     mapView.getMapAsync(this);
@@ -339,9 +339,9 @@ public class MapboxMapController
     } else if (styleString.startsWith("{") || styleString.startsWith("[")) {
       mapboxMap.setStyle(new Style.Builder().fromJson(styleString), onStyleLoadedCallback);
     } else if (
-      !styleString.startsWith("http://") && 
-      !styleString.startsWith("https://")&& 
-      !styleString.startsWith("mapbox://")) {
+            !styleString.startsWith("http://") &&
+                    !styleString.startsWith("https://")&&
+                    !styleString.startsWith("mapbox://")) {
       // We are assuming that the style will be loaded from an asset here.
       AssetManager assetManager = registrar.context().getAssets();
       String key = registrar.lookupKeyForAsset(styleString);
@@ -366,18 +366,19 @@ public class MapboxMapController
       // is fixed with 0.6.0 of annotations plugin
       mapboxMap.addOnMapClickListener(MapboxMapController.this);
       mapboxMap.addOnMapLongClickListener(MapboxMapController.this);
-	    localizationPlugin = new LocalizationPlugin(mapView, mapboxMap, style);
+      localizationPlugin = new LocalizationPlugin(mapView, mapboxMap, style);
 
       methodChannel.invokeMethod("map#onStyleLoaded", null);
-      Drawable drawableStop = ResourcesCompat.getDrawable(context.getResources(), R.drawable.ic_stop, null);
+    /*  Drawable drawableStop = ResourcesCompat.getDrawable(context.getResources(), R.drawable.ic_stop, null);
       Bitmap stopIcon = BitmapUtils.getBitmapFromDrawable(drawableStop);
       Drawable drawableStart = ResourcesCompat.getDrawable(context.getResources(), R.drawable.ic_start, null);
       Bitmap startIcon = BitmapUtils.getBitmapFromDrawable(drawableStart);
       Drawable drawableMarker = ResourcesCompat.getDrawable(context.getResources(), R.drawable.ic_marker, null);
       Bitmap markerIcon = BitmapUtils.getBitmapFromDrawable(drawableMarker);
-      mapboxMap.getStyle().addImage("marker_xml", Bitmap.createScaledBitmap(markerIcon,43,64,true));
-      mapboxMap.getStyle().addImage("stop_xml", Bitmap.createScaledBitmap(stopIcon,43,64,true));
-      mapboxMap.getStyle().addImage("start_xml", Bitmap.createScaledBitmap(startIcon,43,64,true));
+
+      mapboxMap.getStyle().addImage("stop_xml", Bitmap.createScaledBitmap(stopIcon,50,60,true));
+      mapboxMap.getStyle().addImage("start_xml", Bitmap.createScaledBitmap(startIcon,50,60,true));
+      mapboxMap.getStyle().addImage("marker_xml", Bitmap.createScaledBitmap(markerIcon,50,60,true));*/
     }
   };
 
@@ -386,8 +387,8 @@ public class MapboxMapController
     if (hasLocationPermission()) {
       locationEngine = LocationEngineProvider.getBestLocationEngine(context);
       LocationComponentOptions locationComponentOptions = LocationComponentOptions.builder(context)
-        .trackingGesturesManagement(true)
-        .build();
+              .trackingGesturesManagement(true)
+              .build();
       locationComponent = mapboxMap.getLocationComponent();
       locationComponent.activateLocationComponent(context, style, locationComponentOptions);
       locationComponent.setLocationComponentEnabled(true);
@@ -415,10 +416,10 @@ public class MapboxMapController
     userLocation.put("bearing", location.getBearing());
     userLocation.put("horizontalAccuracy", location.getAccuracy());
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        userLocation.put("verticalAccuracy", (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? location.getVerticalAccuracyMeters() : null);
+      userLocation.put("verticalAccuracy", (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? location.getVerticalAccuracyMeters() : null);
     }
     else
-        userLocation.put("verticalAccuracy", null);
+      userLocation.put("verticalAccuracy", null);
     userLocation.put("timestamp", location.getTime());
 
     final Map<String, Object> arguments = new HashMap<>(1);
@@ -481,25 +482,25 @@ public class MapboxMapController
         result.success(null);
         break;
       }
-	    case "map#matchMapLanguageWithDeviceDefault": {
+      case "map#matchMapLanguageWithDeviceDefault": {
         try {
-		      localizationPlugin.matchMapLanguageWithDeviceDefault();
-			    result.success(null);
-		    } catch (RuntimeException exception) {
-		      Log.d(TAG, exception.toString());
-			    result.error("MAPBOX LOCALIZATION PLUGIN ERROR", exception.toString(), null);
-		    }
+          localizationPlugin.matchMapLanguageWithDeviceDefault();
+          result.success(null);
+        } catch (RuntimeException exception) {
+          Log.d(TAG, exception.toString());
+          result.error("MAPBOX LOCALIZATION PLUGIN ERROR", exception.toString(), null);
+        }
         break;
       }
-	    case "map#setMapLanguage": {
-  	    final String language = call.argument("language");
+      case "map#setMapLanguage": {
+        final String language = call.argument("language");
         try {
-		      localizationPlugin.setMapLanguage(language);
-		      result.success(null);
-		    } catch (RuntimeException exception) {
-		      Log.d(TAG, exception.toString());
-			    result.error("MAPBOX LOCALIZATION PLUGIN ERROR", exception.toString(), null);
-		    }
+          localizationPlugin.setMapLanguage(language);
+          result.success(null);
+        } catch (RuntimeException exception) {
+          Log.d(TAG, exception.toString());
+          result.error("MAPBOX LOCALIZATION PLUGIN ERROR", exception.toString(), null);
+        }
         break;
       }
       case "map#getVisibleRegion": {
@@ -551,7 +552,7 @@ public class MapboxMapController
             }
           });
 
-         // moveCamera(cameraUpdate);
+          // moveCamera(cameraUpdate);
         }else {
           result.success(false);
         }
@@ -676,10 +677,10 @@ public class MapboxMapController
 
         List<Symbol> symbolList = new ArrayList<Symbol>();
         for(String symbolId : symbolIds){
-            symbolController = symbols.remove(symbolId);
-            if (symbolController != null) {
-              symbolList.add(symbolController.getSymbol());
-            }
+          symbolController = symbols.remove(symbolId);
+          if (symbolController != null) {
+            symbolList.add(symbolController.getSymbol());
+          }
         }
         if(!symbolList.isEmpty()) {
           symbolManager.delete(symbolList);
@@ -1286,9 +1287,9 @@ public class MapboxMapController
 
   private boolean hasLocationPermission() {
     return checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-      == PackageManager.PERMISSION_GRANTED
-      || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-      == PackageManager.PERMISSION_GRANTED;
+            == PackageManager.PERMISSION_GRANTED
+            || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED;
   }
 
   private int checkSelfPermission(String permission) {
@@ -1296,7 +1297,7 @@ public class MapboxMapController
       throw new IllegalArgumentException("permission is null");
     }
     return context.checkPermission(
-      permission, android.os.Process.myPid(), android.os.Process.myUid());
+            permission, android.os.Process.myPid(), android.os.Process.myUid());
   }
 
   /**

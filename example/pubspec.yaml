@@ -51,17 +51,10 @@ flutter:
   assets:
     - assets/fill/cat_silhouette_pattern.png
     - assets/symbols/custom-icon.png
-    - assets/symbols/2.0x/custom-icon.png
-    - assets/symbols/3.0x/custom-icon.png
-    - assets/symbols/stop.png
-    - assets/symbols/2.0x/stop.png
-    - assets/symbols/3.0x/stop.png
-    - assets/symbols/start.png
-    - assets/symbols/2.0x/start.png
-    - assets/symbols/3.0x/start.png
-    - assets/symbols/map_poi.png
-    - assets/symbols/2.0x/map_poi.png
-    - assets/symbols/3.0x/map_poi.png
+    - assets/symbols/marker-15.svg
+    - assets/symbols/marker.svg
+    - assets/symbols/stop.svg
+    - assets/symbols/start.svg
     - assets/style.json
     - assets/sydney.png
 

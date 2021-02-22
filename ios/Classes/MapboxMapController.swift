@@ -220,6 +220,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                 var symbols: [MGLSymbolStyleAnnotation] = [];
                 for o in options {
                     if let symbol = getSymbolForOptions(options: o)  {
+                        symbol.iconColor = UIColor(hexString: o["iconColor"] as? String ?? "#00ff00") ?? UIColor.green
                         symbols.append(symbol)
                     }
                 }
@@ -510,21 +511,24 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
             // Convert geometry to coordinate and create symbol.
             let coordinate = CLLocationCoordinate2DMake(geometry[0], geometry[1])
             let symbol = MGLSymbolStyleAnnotation(coordinate: coordinate)
+//            if let color = options["iconColor"] as? String {
+//                symbol.iconColor = UIColor.init(hexString: color) ?? UIColor.green
+//            }
             Convert.interpretSymbolOptions(options: options, delegate: symbol)
             // Load icon image from asset if an icon name is supplied.
             if let iconImage = options["iconImage"] as? String {
                 addIconImageToMap(iconImageName: iconImage)
             }
+            
             return symbol
         }
         return nil
     }
 
     private func addIconImageToMap(iconImageName: String) {
-        // Check if the image has already been added to the map.
+
         if self.mapView.style?.image(forName: iconImageName) == nil {
-            // Build up the full path of the asset.
-            // First find the last '/' ans split the image name in the asset directory and the image file name.
+     
             if let range = iconImageName.range(of: "/", options: [.backwards]) {
                 let directory = String(iconImageName[..<range.lowerBound])
                 let assetPath = registrar.lookupKey(forAsset: "\(directory)/")
@@ -534,6 +538,27 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
                     self.mapView.style?.setImage(imageFromAsset, forName: iconImageName)
                 }
             }
+                    
+//            var image = UIImage(named: "marker")
+//            switch iconImageName {
+//            case "marker":
+//                image = UIImage(named: "marker")
+//                break
+//            case "start":
+//                image = UIImage(named: "start")
+//                break
+//            case "stop":
+//                image = UIImage(named: "stop")
+//                break
+//            case "alert":
+//                image = UIImage(named: "alert")
+//                break
+//            default:
+//                image = UIImage(named: "marker")
+//                break
+//            }
+//            self.mapView.style?.setImage(image!, forName: iconImageName)
+        
         }
     }
 
@@ -609,7 +634,8 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         if annotation is MGLUserLocation {
             return nil
         }
-        return MGLAnnotationView(frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+    
+        return MGLAnnotationView(frame: CGRect(x: 0, y: 0, width: 4.4, height: 6))
     }
     
     /*
@@ -632,6 +658,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         symbolAnnotationController = MGLSymbolAnnotationController(mapView: self.mapView)
         symbolAnnotationController!.annotationsInteractionEnabled = true
         symbolAnnotationController?.delegate = self
+        symbolAnnotationController?.iconAllowsOverlap = true
         
         circleAnnotationController = MGLCircleAnnotationController(mapView: self.mapView)
         circleAnnotationController!.annotationsInteractionEnabled = true
@@ -666,7 +693,7 @@ class MapboxMapController: NSObject, FlutterPlatformView, MGLMapViewDelegate, Ma
         // Test if the newCameraCenter and newVisibleCoordinates are inside bbox.
         let inside = MGLCoordinateInCoordinateBounds(newCameraCenter, bbox)
         let intersects = MGLCoordinateInCoordinateBounds(newVisibleCoordinates.ne, bbox) && MGLCoordinateInCoordinateBounds(newVisibleCoordinates.sw, bbox)
-        
+        channel?.invokeMethod("map#onBoundsChanged", arguments: ["center":newCamera.centerCoordinate, "viewingDistance":newCamera.viewingDistance, "bounds":newVisibleCoordinates])
         return inside && intersects
     }
     

@@ -198,25 +198,36 @@ class MapWithTripState extends State<MapWithTrip> {
     }
   }
   SymbolOptions _getSymbolOptions(String iconImage, int symbolCount, String iconColor, LatLng coordinates){
-    return iconImage == 'customFont'
-        ? SymbolOptions(
-      geometry: coordinates,
-      iconImage: 'airport-15',
-      fontNames: ['DIN Offc Pro Bold', 'Arial Unicode MS Regular'],
-      textField: 'Airport',
-      textSize: 12.5,
-      textOffset: Offset(0, 0.8),
-      textAnchor: 'top',
-      textColor: '#000000',
-      textHaloBlur: 1,
-      textHaloColor: '#ffffff',
-      textHaloWidth: 0.8,
-    )
-        : SymbolOptions(
+    return SymbolOptions(
       geometry: coordinates,
       iconImage: iconImage,
       iconColor: iconColor,
     );
+  }
+
+  LatLngBounds boundsFromLatLngList() {
+    assert(tripData.isNotEmpty);
+
+    List<LatLng> list = new List<LatLng>();
+    tripData.forEach((trip) {
+      trip.coordinates.forEach((element) {
+        list.add(LatLng(element.lat, element.long));
+      });
+    });
+    double x0, x1, y0, y1;
+    for (LatLng latLng in list) {
+      if (x0 == null) {
+        x0 = x1 = latLng.latitude;
+        y0 = y1 = latLng.longitude;
+      } else {
+        if (latLng.latitude > x1) x1 = latLng.latitude;
+        if (latLng.latitude < x0) x0 = latLng.latitude;
+        if (latLng.longitude > y1) y1 = latLng.longitude;
+        if (latLng.longitude < y0) y0 = latLng.longitude;
+      }
+    }
+
+    return LatLngBounds(northeast: LatLng(x1, y1), southwest: LatLng(x0, y0));
   }
 
   @override
@@ -226,6 +237,7 @@ class MapWithTripState extends State<MapWithTrip> {
       onMapCreated: _onMapCreated,
       onStyleLoadedCallback: onStyleLoadedCallback,
       onMapClick: _onMapClicked,
+      cameraTargetBounds: CameraTargetBounds(boundsFromLatLngList()),
       initialCameraPosition: CameraPosition(
         target: LatLng(tripData.lastWhere((element) => element.coordinates.length > 1).coordinates.first.lat,tripData.lastWhere((element) => element.coordinates.length > 1).coordinates.first.long),
         zoom: 11.0,
