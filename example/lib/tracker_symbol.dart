@@ -5,6 +5,8 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +16,10 @@ import 'package:mapbox_gl/mapbox_gl.dart';
 import 'main.dart';
 import 'page.dart';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_svg/avd.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 //roadblock-11 stop sign
 //marker-15 normal poi
 
@@ -39,18 +45,18 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
   static final LatLng center = const LatLng(47.506363, 19.049595);
   List<Tracker> getTrackerList() {
     return [
-      Tracker(0,LatLng(47.08123+(Random().nextInt(9).toDouble()/10),19.04142+(Random().nextInt(9).toDouble()/10)),"#ff0000"),
-      Tracker(1,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#ff0000"),
-      Tracker(2,LatLng(48.10123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#ff0000"),
-      Tracker(3,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),18.05142+(Random().nextInt(9).toDouble()/10)),"#ff0000"),
-      Tracker(4,LatLng(45.10123+(Random().nextInt(9).toDouble()/10),18.05142+(Random().nextInt(9).toDouble()/10)),"#ff0000"),
-      Tracker(5,LatLng(49.10123+(Random().nextInt(9).toDouble()/10),15.05142+(Random().nextInt(9).toDouble()/10)),"#ff0000"),
-      Tracker(6,LatLng(47.02123+(Random().nextInt(9).toDouble()/10),19.04142+(Random().nextInt(9).toDouble()/10)),"#0000ff"),
-      Tracker(7,LatLng(47.15123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#0000ff"),
-      Tracker(8,LatLng(48.10123+(Random().nextInt(9).toDouble()/10),19.15142+(Random().nextInt(9).toDouble()/10)),"#0000ff"),
-      Tracker(10,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),18.25142+(Random().nextInt(9).toDouble()/10)),"#0000ff"),
-      Tracker(11,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),16.05142+(Random().nextInt(9).toDouble()/10)),"#0000ff"),
-      Tracker(12,LatLng(48.15123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#0000ff")
+      Tracker(0,LatLng(47.49899088279303, 19.043703967040038),"#ff0000","marker"),
+      Tracker(1,LatLng(47.499447697783566, 19.046033787747366),"#ff0000","marker"),
+      Tracker(2,LatLng(47.49853810834857, 19.041404693330232),"#00ff00","marker"),
+      Tracker(3,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),18.05142+(Random().nextInt(9).toDouble()/10)),"#ffff00","marker"),
+      Tracker(4,LatLng(45.10123+(Random().nextInt(9).toDouble()/10),18.05142+(Random().nextInt(9).toDouble()/10)),"#ffff00","marker"),
+      Tracker(5,LatLng(49.10123+(Random().nextInt(9).toDouble()/10),15.05142+(Random().nextInt(9).toDouble()/10)),"#ff0000","marker"),
+      Tracker(6,LatLng(47.02123+(Random().nextInt(9).toDouble()/10),19.04142+(Random().nextInt(9).toDouble()/10)),"#0000ff","marker"),
+      Tracker(7,LatLng(47.15123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#00ffff","marker"),
+      Tracker(8,LatLng(48.10123+(Random().nextInt(9).toDouble()/10),19.15142+(Random().nextInt(9).toDouble()/10)),"#0000ff","marker"),
+      Tracker(10,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),18.25142+(Random().nextInt(9).toDouble()/10)),"#00ffff","marker"),
+      Tracker(11,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),16.05142+(Random().nextInt(9).toDouble()/10)),"#00ff00","marker"),
+      Tracker(12,LatLng(48.15123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#0000ff","marker")
     ];
   }
 
@@ -66,19 +72,22 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
   }
 
   void _onStyleLoaded() {
-      addImageFromAsset();
-      print("Ekkor töltött be a térkép");
+    addImageFromAsset();
+    print("Ekkor töltött be a térkép");
   }
   Future<void> addImageFromAsset() async{
-       final ByteData bytes = await rootBundle.load("assets/symbols/start.png");
+/*    _makeIconFromSVGAsset("assets/symbols/start.svg","start");
+    _makeIconFromSVGAsset("assets/symbols/marker.svg","marker");
+    _makeIconFromSVGAsset("assets/symbols/stop.svg","stop");*/
+    /*   final ByteData bytes = await rootBundle.load("assets/symbols/start.png");
        final Uint8List list = bytes.buffer.asUint8List();
        await controller.addImage("start", list);
        final ByteData bytes2 = await rootBundle.load("assets/symbols/stop.png");
        final Uint8List list2 = bytes2.buffer.asUint8List();
        await controller.addImage("stop", list2);
-       final ByteData bytes3 = await rootBundle.load("assets/symbols/map_poi.png");
+       final ByteData bytes3 = await rootBundle.load("assets/symbols/marker.png");
        final Uint8List list3 = bytes3.buffer.asUint8List();
-       await controller.addImage("poi", list3);
+       await controller.addImage("marker", list3);*/
   }
 
   @override
@@ -103,6 +112,24 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
       ),
     );
   }
+  static Color fromHex(String hexString) {
+    final buffer = StringBuffer();
+    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+    buffer.write(hexString.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
+  }
+
+
+  Future<void> _makeIconFromSVGAsset(String path, String name, String color) async{
+    final String assetName = path;
+    final svgString = await rootBundle.loadString(assetName);
+    final DrawableRoot svgRoot = await svg.fromSvgString(svgString, "");
+    final ui.Picture picture = svgRoot.toPicture(colorFilter: ColorFilter.mode(fromHex(color), BlendMode.srcIn));
+    final ui.Image _image = await picture.toImage(90 , 90);
+    final ByteData bytes = await _image.toByteData(format: ui.ImageByteFormat.png);
+    final Uint8List list = bytes.buffer.asUint8List();
+    await controller.addImage(name, list);
+  }
 
   void _addTracker(Tracker tracker) {
     if (tracker != null) {
@@ -122,30 +149,55 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
       coordinates.latitude,
       coordinates.longitude,
     );
-    return iconImage == 'customFont'
-        ? SymbolOptions(
-      geometry: geometry,
-      iconImage: 'airport-15',
-      fontNames: ['DIN Offc Pro Bold', 'Arial Unicode MS Regular'],
-      textField: 'Airport',
-      textSize: 12.5,
-      textOffset: Offset(0, 0.8),
-      textAnchor: 'top',
-      textColor: '#000000',
-      textHaloBlur: 1,
-      textHaloColor: '#ffffff',
-      textHaloWidth: 0.8,
-    )
-        : SymbolOptions(
-      geometry: geometry,
-      iconImage: iconImage,
-      iconColor: iconColor,
-    );
+    if (Platform.isAndroid) {
+      return SymbolOptions(
+          geometry: geometry,
+          iconImage: iconImage,
+          iconColor: iconColor,
+          iconOffset: Offset(0,0),
+          iconOpacity: 1.0,
+          iconAnchor: "bottom",
+          iconSize: 1.0
+      );
+    } else if (Platform.isIOS) {
+      return SymbolOptions(
+          geometry: geometry,
+          iconImage: iconImage,
+          iconColor: iconColor,
+          iconOffset: Offset(0,0),
+          iconOpacity: 1.0,
+          iconAnchor: "bottom",
+          iconSize: 0.5
+      );
+    }
+
   }
 
   Future<void> _addAllTracker(List<Tracker> trackers) async {
     if (trackers != null && trackers.isNotEmpty) {
       trackers.forEach((tracker) {
+        String trackerColor = tracker.color;
+        String trackerIconName = tracker.iconImage+tracker.color.replaceAll("#", "");
+        switch (tracker.iconImage){
+          case "start": {
+            _makeIconFromSVGAsset("assets/symbols/start.svg",trackerIconName,trackerColor);
+            break;
+          }
+          case "stop": {
+            _makeIconFromSVGAsset("assets/symbols/stop.svg",trackerIconName,trackerColor);
+            break;
+          }
+          case "marker": {
+
+            _makeIconFromSVGAsset("assets/symbols/marker-15.svg",trackerIconName,trackerColor);
+            break;
+          }
+          default: {
+
+          }
+        }
+        tracker.iconImage = trackerIconName;
+
         controller.addSymbol(
             _getSymbolOptions(tracker.iconImage, tracker.id, tracker.color, tracker.coordinates),
             {'trackerId': tracker.id}
@@ -259,14 +311,15 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
         Center(
           child: SizedBox(
             width: 300.0,
-            height: 300.0,
+            height: 500.0,
             child: MapboxMap(
               accessToken: MapsDemo.ACCESS_TOKEN,
               onMapCreated: _onMapCreated,
               onStyleLoadedCallback: _onStyleLoaded,
+              minMaxZoomPreference: MinMaxZoomPreference(5,16),
               initialCameraPosition: const CameraPosition(
                 target: LatLng(47.506363, 19.049595),
-                zoom: 11.0,
+                zoom: 8.0,
               ),
             ),
           ),
@@ -304,7 +357,7 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
                         FlatButton(
                           child: const Text('hide all tracker'),
                           onPressed: () =>
-                          _hideAllTracker(),
+                              _hideAllTracker(),
                         ),
                         FlatButton(
                           child: const Text('show all tracker'),
@@ -333,13 +386,14 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
 
 class Tracker {
   int id;
-  String iconImage = "poi";
+  String iconImage;
   String color;
   LatLng coordinates;
 
-  Tracker(int trackerId, LatLng coordinates, String color) {
+  Tracker(int trackerId, LatLng coordinates, String color, String image) {
     this.id = trackerId;
     this.coordinates = coordinates;
     this.color = color;
+    this.iconImage = image;
   }
 }
