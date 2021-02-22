@@ -5,15 +5,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
-import 'package:mapbox_gl/src/trip.dart';
 
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:io' show Platform;
 
-import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_svg/avd.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'tracker_model.dart';
@@ -21,36 +18,20 @@ import 'tracker_model.dart';
 // ignore: must_be_immutable
 class TrackerMap extends StatefulWidget {
 
-  List<TrackerModel> trackers;
-  String accessToken;
-  Function(TrackerModel) trackerPressCallback;
-  Function() onStyleLoaded;
+  final List<TrackerModel> trackers;
+  final String accessToken;
+  final Function(TrackerModel) trackerPressCallback;
+  final Function() onStyleLoaded;
 
-  TrackerMap(List<TrackerModel> trackers, String token, Function(TrackerModel) callback, Function() styleLoaded) {
-    this.trackers = trackers;
-    this.accessToken = token;
-    this.trackerPressCallback = callback;
-    this.onStyleLoaded = styleLoaded;
 
-  }
+  TrackerMap(this.trackers, this.accessToken, this.trackerPressCallback, this.onStyleLoaded,{GlobalKey<TrackerMapState> key}): super(key: key);
 
   @override
-  State<StatefulWidget> createState() => TrackerMapState(this.trackers,this.accessToken,  this.trackerPressCallback, this.onStyleLoaded);
+  State<StatefulWidget> createState() => TrackerMapState();
 }
 
 class TrackerMapState extends State<TrackerMap> {
 
-  List<TrackerModel> trackers;
-  String accessToken;
-  Function(TrackerModel) trackerPressCallback;
-  Function() onStyleLoaded;
-
-  TrackerMapState(List<TrackerModel> trackers, String token, Function(TrackerModel) callback, Function() styleLoaded) {
-    this.trackers = trackers;
-    this.accessToken = token;
-    this.trackerPressCallback = callback;
-    this.onStyleLoaded = styleLoaded;
-  }
 
   int _symbolCount = 0;
   int eventCount = 0;
@@ -93,8 +74,8 @@ class TrackerMapState extends State<TrackerMap> {
    * Once loaded, the map draws the pre-specified route and indicates the Start-Stop event
    */
   void onStyleLoadedCallback() {
-    _addAllTracker(trackers);
-    onStyleLoaded();
+    addAllTracker(widget.trackers);
+    widget.onStyleLoaded();
   }
 
 
@@ -112,7 +93,7 @@ class TrackerMapState extends State<TrackerMap> {
         iconSize: 1.4,
       ),
     );
-    trackerPressCallback(TrackerModel(int.parse(symbol.id),symbol.options.geometry,symbol.options.iconColor,"marker"));
+    widget.trackerPressCallback(TrackerModel(int.parse(symbol.id),symbol.options.geometry,symbol.options.iconColor,"marker"));
   }
   static Color fromHex(String hexString) {
     final buffer = StringBuffer();
@@ -177,7 +158,7 @@ class TrackerMapState extends State<TrackerMap> {
     }
   }
 
-  Future<void> _addAllTracker(List<TrackerModel> trackers) async {
+  Future<void> addAllTracker(List<TrackerModel> trackers) async {
     if (trackers != null && trackers.isNotEmpty) {
       trackers.forEach((tracker) {
         String trackerColor = tracker.color;
@@ -213,7 +194,9 @@ class TrackerMapState extends State<TrackerMap> {
       });
     }
   }
-  Future<void> _removeTracker(Symbol symbol) {
+
+
+  Future<void> removeTracker(Symbol symbol) {
     _selectedSymbol = symbol;
     controller.removeSymbol(_selectedSymbol);
     setState(() {
@@ -221,14 +204,14 @@ class TrackerMapState extends State<TrackerMap> {
       _symbolCount -= 1;
     });
   }
-  Future<void>  _removeAllTracker() {
+  Future<void>  removeAllTracker() {
     controller.removeSymbols(controller.symbols);
     setState(() {
       _selectedSymbol = null;
       _symbolCount = 0;
     });
   }
-  Future<void> _updateAllTrackerPosition(List<TrackerModel> trackers) {
+  Future<void> updateAllTrackerPosition(List<TrackerModel> trackers) {
     trackers.forEach((tracker) {
       Symbol symbol = controller.symbols.firstWhere((element) =>
       element.data["trackerId"] == tracker.id);
@@ -305,10 +288,10 @@ class TrackerMapState extends State<TrackerMap> {
   }
 
   LatLngBounds boundsFromLatLngList() {
-    assert(trackers.isNotEmpty);
+    assert(widget.trackers.isNotEmpty);
 
-    List<LatLng> list = new List<LatLng>();
-    trackers.forEach((element) {
+    List<LatLng> list = [];
+    widget.trackers.forEach((element) {
       list.add(element.coordinates);
     });
     double x0, x1, y0, y1;
@@ -328,8 +311,8 @@ class TrackerMapState extends State<TrackerMap> {
   }
 
   LatLng initialPosition() {
-    if (trackers.isNotEmpty)
-      return trackers.first.coordinates;
+    if (widget.trackers.isNotEmpty)
+      return widget.trackers.first.coordinates;
     else
       LatLng(47.0,19.0);
   }
@@ -337,7 +320,7 @@ class TrackerMapState extends State<TrackerMap> {
   @override
   Widget build(BuildContext context) {
     return MapboxMap(
-      accessToken: accessToken,
+      accessToken: widget.accessToken,
       onMapCreated: _onMapCreated,
       onStyleLoadedCallback: onStyleLoadedCallback,
       onMapClick: _onMapClicked,
