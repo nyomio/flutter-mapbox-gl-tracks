@@ -28,26 +28,10 @@ class MapWithTrip extends StatefulWidget {
   }
 
   @override
-  State<StatefulWidget> createState() => MapWithTripState(this.tripData,this.accessToken, this.startIconPath, this.endIconPath, this.tripPressCallback, this.onStyleLoaded);
+  State<StatefulWidget> createState() => MapWithTripState();
 }
 
 class MapWithTripState extends State<MapWithTrip> {
-
-  List<Trip> tripData;
-  String accessToken;
-  String startIconPath;
-  String endIconPath;
-  Function(GpsLocation) tripPressCallback;
-  Function() onStyleLoaded;
-
-  MapWithTripState(List<Trip> trip, String token, String startIconPath, String endIconPath, Function(GpsLocation) callback, Function() styleLoaded) {
-    this.tripData = trip;
-    this.accessToken = token;
-    this.tripPressCallback = callback;
-    this.onStyleLoaded = styleLoaded;
-    this.endIconPath = endIconPath;
-    this.startIconPath = startIconPath;
-  }
 
   int _symbolCount = 0;
   int eventCount = 0;
@@ -64,10 +48,10 @@ class MapWithTripState extends State<MapWithTrip> {
    * Here you specify which images / icons should be included on the map
    */
   Future<void> addImageFromAsset() async{
-    final ByteData bytes = await rootBundle.load(this.startIconPath); // "assets/symbols/start.png"
+    final ByteData bytes = await rootBundle.load(widget.startIconPath); // "assets/symbols/start.png"
     final Uint8List list = bytes.buffer.asUint8List();
     await controller.addImage("start", list);
-    final ByteData bytes2 = await rootBundle.load(this.endIconPath); // "assets/symbols/stop.png"
+    final ByteData bytes2 = await rootBundle.load(widget.endIconPath); // "assets/symbols/stop.png"
     final Uint8List list2 = bytes2.buffer.asUint8List();
     await controller.addImage("stop", list2);
 
@@ -127,7 +111,7 @@ class MapWithTripState extends State<MapWithTrip> {
       tripPressCallback(selectedGpsLocation);
     }
     else {*/
-      tripPressCallback(GpsLocation(latLng.latitude,latLng.longitude,0.0,0.0,0.0,0));
+    widget.tripPressCallback(GpsLocation(latLng.latitude,latLng.longitude,0.0,0.0,0.0,0));
     /*}*/
   }
 
@@ -140,7 +124,7 @@ class MapWithTripState extends State<MapWithTrip> {
    */
   void onStyleLoadedCallback() {
     addImageFromAsset();
-    tripData.forEach((trip) {
+    widget.tripData.forEach((trip) {
       if (trip.coordinates.length > 1) {
         List<LatLng> geometry = [];
         trip.coordinates.sort((a, b) => a.time.compareTo(b.time));
@@ -161,7 +145,10 @@ class MapWithTripState extends State<MapWithTrip> {
       }
     });
 
-    onStyleLoaded();
+
+    controller.moveCamera(CameraUpdate.newLatLngBounds(boundsFromLatLngList()));
+
+    widget.onStyleLoaded();
   }
 
   void _onEventTapped(Symbol symbol) {
@@ -206,10 +193,10 @@ class MapWithTripState extends State<MapWithTrip> {
   }
 
   LatLngBounds boundsFromLatLngList() {
-    assert(tripData.isNotEmpty);
+    assert(widget.tripData.isNotEmpty);
 
     List<LatLng> list = new List<LatLng>();
-    tripData.forEach((trip) {
+    widget.tripData.forEach((trip) {
       trip.coordinates.forEach((element) {
         list.add(LatLng(element.lat, element.long));
       });
@@ -227,19 +214,38 @@ class MapWithTripState extends State<MapWithTrip> {
       }
     }
 
-    return LatLngBounds(northeast: LatLng(x1, y1), southwest: LatLng(x0, y0));
+
+    //if no data provided, hungary bounds default
+    if (x0 == null || y0 == null || x1 == null || y1 == null) {
+      x0 = 46;
+      y0 = 16;
+      x1 = 47;
+      y1 = 22;
+    }
+
+
+    // OPTIONAL - Add some extra "padding" for better map display
+    double padding = 1;
+    double south = x0 - padding;
+    double west = y0 - padding;
+    double north = x1 + padding;
+    double east = y1 + padding;
+
+    LatLng northeast = LatLng(north, east);
+    LatLng southwest = LatLng(south, west);
+
+    return LatLngBounds(northeast: northeast, southwest: southwest);
   }
 
   @override
   Widget build(BuildContext context) {
     return MapboxMap(
-      accessToken: accessToken,
+      accessToken: widget.accessToken,
       onMapCreated: _onMapCreated,
       onStyleLoadedCallback: onStyleLoadedCallback,
       onMapClick: _onMapClicked,
-      cameraTargetBounds: CameraTargetBounds(boundsFromLatLngList()),
       initialCameraPosition: CameraPosition(
-        target: LatLng(tripData.lastWhere((element) => element.coordinates.length > 1).coordinates.first.lat,tripData.lastWhere((element) => element.coordinates.length > 1).coordinates.first.long),
+        target: LatLng(47,19),
         zoom: 11.0,
       ),
     );
