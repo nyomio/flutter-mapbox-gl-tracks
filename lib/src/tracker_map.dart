@@ -16,23 +16,60 @@ import 'tracker_model.dart';
 
 // ignore: must_be_immutable
 class TrackerMap extends StatefulWidget {
-  final List<TrackerModel> trackers;
+  List<TrackerModel> trackers;
   final String accessToken;
   final Function(TrackerModel) trackerPressCallback;
   final Function() onStyleLoaded;
 
-  TrackerMap(this.trackers, this.accessToken, this.trackerPressCallback, this.onStyleLoaded, {GlobalKey<TrackerMapState> key}) : super(key: key);
-
+  TrackerMap(this.trackers, this.accessToken, this.trackerPressCallback, this.onStyleLoaded, {GlobalKey<TrackerMapState> trackerMapKey}) : super(key: trackerMapKey);
+  TrackerMapState mapState = new TrackerMapState();
   @override
-  State<StatefulWidget> createState() => TrackerMapState();
+  State<StatefulWidget> createState() => mapState;
+
+  void addTracker(TrackerModel newTracker) {
+    mapState.addTracker(newTracker);
+  }
+  void addTrackers(List<TrackerModel> trackers) {
+    mapState._addImages(trackers);
+  }
+  void replaceTrackers(List<TrackerModel> newTrackers) {
+    mapState.replaceTrackers(newTrackers);
+  }
+
+  void hideTrackersById(List<int> trackerIds) {
+    mapState.hideTrackersById(trackerIds);
+  }
+  void showTrackersById(List<int> trackerIds) {
+    mapState.showTrackersById(trackerIds);
+  }
+
+  void removeTrackers(){
+    mapState.removeTrackers();
+  }
+  void removeTracker(int trackerId){
+    mapState.removeTracker(trackerId);
+  }
+
+  void updateTrackersCoordinates(List<TrackerModel> trackers) {
+    mapState.updateAllTrackerPosition(trackers);
+  }
+  void updateTrackerCoordinates(TrackerModel trackerModel){
+    mapState._updateTrackerPosition(trackerModel.id,trackerModel.coordinates);
+  }
+  void updateTracker(TrackerModel trackerModel){
+    mapState._updateTracker(trackerModel);
+  }
 }
 
 class TrackerMapState extends State<TrackerMap> {
   int _symbolCount = 0;
-  int eventCount = 0;
+  int _imageCount = 0;
+
   Symbol _selectedSymbol;
   MapboxMapController controller;
   Line _selectedLine;
+
+  List<TrackerModel> widgetTrackers;
 
   void _onMapCreated(MapboxMapController controller) {
     this.controller = controller;
@@ -64,27 +101,20 @@ class TrackerMapState extends State<TrackerMap> {
    * Once loaded, the map draws the pre-specified route and indicates the Start-Stop event
    */
   void onStyleLoadedCallback() {
-    addAllTracker(widget.trackers);
+    if (widget.trackers != null && widget.trackers.isNotEmpty) {
+      _addImages(widget.trackers);
+    }
+   // addAllTracker(widget.trackers)
     widget.onStyleLoaded();
   }
 
   void _onTrackerTapped(Symbol symbol) {
-    if (_selectedSymbol != null) {
-      _updateSelectedTracker(
-        const SymbolOptions(iconSize: 1.0),
-      );
-    }
     setState(() {
       _selectedSymbol = symbol;
     });
-    _updateSelectedTracker(
-      SymbolOptions(
-        iconSize: 1.4,
-      ),
-    );
     Map<dynamic, dynamic> data = symbol.data;
     var trackerId = data["trackerId"];
-    widget.trackerPressCallback(TrackerModel(trackerId, symbol.options.geometry, symbol.options.iconColor, "marker"));
+    widget.trackerPressCallback(TrackerModel(trackerId, symbol.options.geometry, symbol.options.iconColor, symbol.options.iconImage));
   }
 
   static Color fromHex(String hexString) {
@@ -109,22 +139,32 @@ class TrackerMapState extends State<TrackerMap> {
     controller.updateSymbol(_selectedSymbol, changes);
   }
 
-  void _addTracker(TrackerModel tracker) {
-    if (tracker != null) {
-      controller.addSymbol(_getSymbolOptions(tracker.iconImage, tracker.id, tracker.color, tracker.coordinates), {'trackerId': tracker.id});
-      setState(() {
-        _symbolCount += 1;
-      });
-    }
+  void addTracker(TrackerModel tracker){
+    if (widgetTrackers == null)
+      widgetTrackers = new List<TrackerModel>();
+    widgetTrackers.add(tracker);
+    String trackerColor = tracker.color;
+    String trackerIconName = "marker" + tracker.id.toString() + tracker.color.replaceAll("#", "");
+    _makeIconFromSVGAsset(tracker.iconImage, trackerIconName, trackerColor).whenComplete(() => _imageAdded(tracker));
   }
 
-  SymbolOptions _getSymbolOptions(String iconImage, int symbolCount, String iconColor, LatLng coordinates) {
+  SymbolOptions _getSymbolOptions(String iconImage, LatLng coordinates, String name) {
     LatLng geometry = LatLng(
       coordinates.latitude,
       coordinates.longitude,
     );
 
-    return SymbolOptions(geometry: geometry, iconImage: iconImage, iconColor: iconColor, iconOffset: Offset(0, 0), iconOpacity: 1.0, iconAnchor: "bottom", iconSize: _getSymbolIconSize());
+    return SymbolOptions(
+        geometry: geometry,
+        iconImage: iconImage,
+        iconOffset: Offset(0, 0),
+        iconOpacity: 1.0,
+        iconAnchor: "bottom",
+        iconSize: _getSymbolIconSize(),
+        textField: "",
+        textSize: 12.0,
+        textAnchor: "top",
+        textColor: "#00000000");
   }
 
   double _getSymbolIconSize() {
@@ -135,51 +175,73 @@ class TrackerMapState extends State<TrackerMap> {
     }
   }
 
-  Future<void> addAllTracker(List<TrackerModel> trackers) async {
+  void _imageAdded(TrackerModel tracker){
+    _imageCount = 0;
+    print("_imageAdded " + tracker.id.toString());
+    String trackerColor = tracker.color;
+    String trackerIconName = "marker" + tracker.id.toString() + tracker.color.replaceAll("#", "");
+    controller.addSymbol(_getSymbolOptions(trackerIconName, tracker.coordinates, tracker.id.toString()), {'trackerId': tracker.id}).whenComplete(() =>
+      setState(() {_symbolCount += 1;})
+    );
+  }
+
+  void _imagesAdded(List<TrackerModel> trackers){
+    _imageCount++;
+    if (_imageCount == trackers.length)
+      {
+        _imageCount = 0;
+        addTrackers(trackers);
+      }
+  }
+
+
+  void _addImages(List<TrackerModel> trackers){
+    if (widgetTrackers == null)
+      widgetTrackers = new List<TrackerModel>()
+    widgetTrackers.addAll(trackers);
+    _imageCount = 0;
+    trackers.forEach((tracker) {
+      String trackerColor = tracker.color;
+      String trackerIconName = "marker" + tracker.id.toString() + tracker.color.replaceAll("#", "");
+      _makeIconFromSVGAsset(tracker.iconImage, trackerIconName, trackerColor).whenComplete(() => _imagesAdded(trackers));
+    });
+  }
+
+  void replaceTrackers(List<TrackerModel> trackers) {
+    _imageCount = 0;
+    _symbolCount = 0;
+    controller.removeSymbols(controller.symbols).whenComplete(() => _addImages(trackers));
+  }
+
+  void addTrackers(List<TrackerModel> trackers) async {
     if (trackers != null && trackers.isNotEmpty) {
       trackers.forEach((tracker) {
-        String trackerColor = tracker.color;
-        String trackerIconName = tracker.iconImage + tracker.color.replaceAll("#", "");
-        switch (tracker.iconImage) {
-          case "start":
-            {
-              _makeIconFromSVGAsset("assets/symbols/start.svg", trackerIconName, trackerColor);
-              break;
-            }
-          case "stop":
-            {
-              _makeIconFromSVGAsset("assets/symbols/stop.svg", trackerIconName, trackerColor);
-              break;
-            }
-          case "marker":
-            {
-              _makeIconFromSVGAsset("assets/symbols/marker-15.svg", trackerIconName, trackerColor);
-              break;
-            }
-          default:
-            {}
-        }
+        String trackerIconName = "marker" + tracker.id.toString() + tracker.color.replaceAll("#", "");
         tracker.iconImage = trackerIconName;
-
-        controller.addSymbol(_getSymbolOptions(tracker.iconImage, tracker.id, tracker.color, tracker.coordinates), {'trackerId': tracker.id});
+        controller.addSymbol(_getSymbolOptions(tracker.iconImage, tracker.coordinates, tracker.id.toString()), {'trackerId': tracker.id});
       });
 
       setState(() {
         _symbolCount += trackers.length;
       });
+      controller.moveCamera(CameraUpdate.newLatLngBounds(boundsFromLatLngList()));
+    }
+
+  }
+
+  Future<void> removeTracker(int trackerId) {
+    if (trackerId != null) {
+      _selectedSymbol = controller.symbols.firstWhere((element) => element
+          .data["trackerId"] == trackerId);
+      controller.removeSymbol(_selectedSymbol);
+      setState(() {
+        _selectedSymbol = null;
+        _symbolCount -= 1;
+      });
     }
   }
 
-  Future<void> removeTracker(Symbol symbol) {
-    _selectedSymbol = symbol;
-    controller.removeSymbol(_selectedSymbol);
-    setState(() {
-      _selectedSymbol = null;
-      _symbolCount -= 1;
-    });
-  }
-
-  Future<void> removeAllTracker() {
+  Future<void> removeTrackers() {
     controller.removeSymbols(controller.symbols);
     setState(() {
       _selectedSymbol = null;
@@ -188,64 +250,70 @@ class TrackerMapState extends State<TrackerMap> {
   }
 
   Future<void> updateAllTrackerPosition(List<TrackerModel> trackers) {
-    trackers.forEach((tracker) {
-      Symbol symbol = controller.symbols.firstWhere((element) => element.data["trackerId"] == tracker.id, orElse: () {
-        print("no matching element in symbols: ${tracker.id}");
-        return null;
-      });
-      if (symbol != null) {
-        _selectedSymbol = symbol;
-        _updateSelectedTracker(
-          SymbolOptions(
-            geometry: LatLng(
-              tracker.coordinates.latitude,
-              tracker.coordinates.longitude,
+    if (trackers != null) {
+      trackers.forEach((tracker) {
+        Symbol symbol = controller.symbols.firstWhere((element) =>
+        element.data["trackerId"] == tracker.id, orElse: () {
+          print("no matching element in symbols: ${tracker.id}");
+          return null;
+        });
+        if (symbol != null) {
+          _selectedSymbol = symbol;
+          _updateSelectedTracker(
+            SymbolOptions(
+              geometry: LatLng(
+                tracker.coordinates.latitude,
+                tracker.coordinates.longitude,
+              ),
             ),
-          ),
-        );
-      }
-    });
+          );
+        }
+      });
+    }
   }
-
-  Future<void> _changeTrackerPosition(Symbol symbol, LatLng newCoordinate) {
-    _selectedSymbol = symbol;
-    _updateSelectedTracker(
-      SymbolOptions(
-        geometry: LatLng(
-          newCoordinate.latitude,
-          newCoordinate.longitude,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _hideAllTrackerIf(bool condition) async {
-    controller.symbols.forEach((element) {
-      if (condition) {
-        _updateSelectedTracker(
-          SymbolOptions(iconOpacity: 0.0),
-        );
-      }
-    });
-  }
-
-  Future<void> _hideAllTracker() async {
-    controller.symbols.forEach((element) {
-      _selectedSymbol = element;
+  Future<void> _updateTrackerPosition(int trackerId, LatLng coordinates) {
+    if (coordinates != null && trackerId != null) {
+      _selectedSymbol = controller.symbols.firstWhere((element) => element.data["trackerId"] == trackerId);
       _updateSelectedTracker(
-        SymbolOptions(iconOpacity: 0.0),
+        SymbolOptions(
+          geometry: LatLng(
+            coordinates.latitude,
+            coordinates.longitude,
+          ),
+        ),
       );
-    });
+    }
+  }
+  Future<void> _updateTracker(TrackerModel trackerModel) {
+    if (trackerModel != null) {
+      removeTracker(trackerModel.id).whenComplete(() => addTracker(trackerModel));
+    }
   }
 
-  Future<void> _showAllTrackerIf(bool condition) async {
-    controller.symbols.forEach((element) {
-      if (condition) {
-        _updateSelectedTracker(
-          SymbolOptions(iconOpacity: 1.0),
-        );
-      }
-    });
+  Future<void> hideTrackersById(List<int> trackerIds) async {
+    if (trackerIds != null) {
+      controller.symbols.forEach((element) {
+        if (trackerIds.contains(element.data["trackerId"])) {
+          _selectedSymbol = element;
+          _updateSelectedTracker(
+            SymbolOptions(iconOpacity: 0.0),
+          );
+        }
+      });
+    }
+  }
+
+  Future<void> showTrackersById(List<int> trackerIds) async {
+    if (trackerIds != null) {
+      controller.symbols.forEach((element) {
+        if (trackerIds.contains(element.data["trackerId"])) {
+          _selectedSymbol = element;
+          _updateSelectedTracker(
+            SymbolOptions(iconOpacity: 1.0),
+          );
+        }
+      });
+    }
   }
 
   Future<void> _showAllTracker() async {
@@ -267,7 +335,8 @@ class TrackerMapState extends State<TrackerMap> {
   }
 
   LatLngBounds boundsFromLatLngList() {
-    assert(widget.trackers.isNotEmpty);
+    if (widget.trackers.isEmpty)
+      return LatLngBounds();
 
     List<LatLng> list = [];
     widget.trackers.forEach((element) {

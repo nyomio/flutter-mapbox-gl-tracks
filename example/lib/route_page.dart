@@ -37,7 +37,12 @@ class RoutePageBodyState extends State<RoutePageBody> {
   RoutePageBodyState();
 
   static final LatLng center = const LatLng(47.506363, 19.049595);
-
+  List<Trip> trips() {
+    List<Trip> trps = new List<Trip>();
+    trps.add(Trip(0,"#ff0000",[GpsLocation(45.21,19.21,0.0,0.0,12.2,1231233123),GpsLocation(46.21,18.21,0.0,0.0,12.2,1531233123)],12));
+    trps.add(Trip(1,"#00ff00",[GpsLocation(42.21,18.21,0.0,0.0,12.2,1231233123),GpsLocation(47.27,16.21,0.0,0.0,12.2,1531233123)],12));
+    return trps;
+  }
   Route getRandomRoute() {
     return Route(0,
         [
@@ -143,58 +148,20 @@ class RoutePageBodyState extends State<RoutePageBody> {
     routes.add(getRandomRoute2());
       return routes;
   }
-
+  Function callBackGps(GpsLocation gpsLocation){
+    print(gpsLocation.toString());
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Center(
-          child: SizedBox(
-            width: 300.0,
-            height: 300.0,
-            child: MapboxMap(
-              accessToken: MapsDemo.ACCESS_TOKEN,
-              onMapCreated: _onMapCreated,
-              onStyleLoadedCallback: _onStyleLoaded,
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(47.506363, 19.049595),
-                zoom: 11.0,
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Column(
-                      children: <Widget>[
-
-                        FlatButton(
-                          child: const Text('add line'),
-                          onPressed: () => _addLines(getRandomRoutes()),
-                        ),
-                        FlatButton(
-                          child: const Text('remove lines'),
-                          onPressed: () => _removeLines(),
-                        ),
-
-                      ],
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
+    return  MapWithTrip(
+                trips(),
+                MapsDemo.ACCESS_TOKEN,
+                startMarkerIconPath,
+                stopMarkerIconPath,
+                callBackGps,
+                _onStyleLoaded
+              );
   }
 }
 

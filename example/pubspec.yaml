@@ -50,11 +50,10 @@ flutter:
 
   assets:
     - assets/fill/cat_silhouette_pattern.png
-    - assets/symbols/custom-icon.png
-    - assets/symbols/marker-15.svg
     - assets/symbols/marker.svg
     - assets/symbols/stop.svg
     - assets/symbols/start.svg
+    - assets/symbols/pause.svg
     - assets/style.json
     - assets/sydney.png
 

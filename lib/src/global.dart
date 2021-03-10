@@ -17,3 +17,8 @@ Future<void> installOfflineMapTiles(String tilesDb) async {
     },
   );
 }
+
+final String baseMarkerIconPath = "assets/symbols/marker.svg";
+final String startMarkerIconPath = "assets/symbols/start.svg";
+final String stopMarkerIconPath = "assets/symbols/stop.svg";
+final String pauseMarkerIconPath = "assets/symbols/pause.svg";

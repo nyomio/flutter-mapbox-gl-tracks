@@ -134,10 +134,10 @@ class EventSymbolPageBodyState extends State<EventSymbolPageBody> {
 
   }
   Future<void> addImageFromAsset() async{
-    final ByteData bytes = await rootBundle.load("assets/symbols/start.png");
+    final ByteData bytes = await rootBundle.load(startMarkerIconPath);
     final Uint8List list = bytes.buffer.asUint8List();
     await controller.addImage("start", list);
-    final ByteData bytes2 = await rootBundle.load("assets/symbols/stop.png");
+    final ByteData bytes2 = await rootBundle.load(stopMarkerIconPath);
     final Uint8List list2 = bytes2.buffer.asUint8List();
     await controller.addImage("stop", list2);
 

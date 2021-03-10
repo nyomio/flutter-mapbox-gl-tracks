@@ -430,6 +430,7 @@ public class MapboxMapController
   private void enableSymbolManager(@NonNull Style style) {
     if (symbolManager == null) {
       symbolManager = new SymbolManager(mapView, mapboxMap, style);
+      symbolManager.
       symbolManager.setIconAllowOverlap(true);
       symbolManager.setIconIgnorePlacement(true);
       symbolManager.setTextAllowOverlap(true);
