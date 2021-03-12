@@ -197,7 +197,7 @@ class TrackerMapState extends State<TrackerMap> {
 
   void _addImages(List<TrackerModel> trackers){
     if (widgetTrackers == null)
-      widgetTrackers = new List<TrackerModel>()
+      widgetTrackers = new List<TrackerModel>();
     widgetTrackers.addAll(trackers);
     _imageCount = 0;
     trackers.forEach((tracker) {
