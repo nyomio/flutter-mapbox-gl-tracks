@@ -160,14 +160,14 @@ class MapWithTripState extends State<MapWithTrip> {
         controller.addLine(
           LineOptions(
             geometry: geometry,
-            lineColor: trip.color,
+            lineColor: trip.pathColor,
             lineWidth: 5.0,
             lineOpacity: 0.5,
           ),
         );
 
-        addStartImageAsset(trip.color, trip.coordinates.first);
-        addEndImageAsset(trip.color, trip.coordinates.last);
+        addStartImageAsset(trip.startColor, trip.coordinates.first);
+        addEndImageAsset(trip.endColor, trip.coordinates.last);
       }
     });
   }

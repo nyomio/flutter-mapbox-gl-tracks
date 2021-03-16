@@ -1,18 +1,29 @@
 
 class Trip {
   final int id;
-  final String color;
+  final String pathColor;
+  final String startColor;
+  final String endColor;
   final List<GpsLocation> coordinates;
   final int waitingTime;
 
-  Trip(this.id, this.color, this.coordinates, this.waitingTime);
+
+  Trip(this.id, this.pathColor, this.startColor, this.endColor, this.coordinates, this.waitingTime);
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is Trip && runtimeType == other.runtimeType && id == other.id && color == other.color && coordinates == other.coordinates && waitingTime == other.waitingTime;
+      identical(this, other) ||
+      other is Trip &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          pathColor == other.pathColor &&
+          startColor == other.startColor &&
+          endColor == other.endColor &&
+          coordinates == other.coordinates &&
+          waitingTime == other.waitingTime;
 
   @override
-  int get hashCode => id.hashCode ^ color.hashCode ^ coordinates.hashCode ^ waitingTime.hashCode;
+  int get hashCode => id.hashCode ^ pathColor.hashCode ^ startColor.hashCode ^ endColor.hashCode ^ coordinates.hashCode ^ waitingTime.hashCode;
 }
 
 class GpsLocation {

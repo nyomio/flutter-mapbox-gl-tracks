@@ -39,8 +39,8 @@ class RoutePageBodyState extends State<RoutePageBody> {
   static final LatLng center = const LatLng(47.506363, 19.049595);
   List<Trip> trips() {
     List<Trip> trps = new List<Trip>();
-    trps.add(Trip(0,"#ff0000",[GpsLocation(45.21,19.21,0.0,0.0,12.2,1231233123),GpsLocation(46.21,18.21,0.0,0.0,12.2,1531233123)],12));
-    trps.add(Trip(1,"#00ff00",[GpsLocation(42.21,18.21,0.0,0.0,12.2,1231233123),GpsLocation(47.27,16.21,0.0,0.0,12.2,1531233123)],12));
+    trps.add(Trip(0,"#ff0000","#ff0000","#ff0000",[GpsLocation(45.21,19.21,0.0,0.0,12.2,1231233123),GpsLocation(46.21,18.21,0.0,0.0,12.2,1531233123)],12));
+    trps.add(Trip(1,"#00ff00","#ff00ff","#ff0000",[GpsLocation(42.21,18.21,0.0,0.0,12.2,1231233123),GpsLocation(47.27,16.21,0.0,0.0,12.2,1531233123)],12));
     return trps;
   }
   Route getRandomRoute() {
