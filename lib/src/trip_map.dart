@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:mapbox_gl/src/Constants.dart';
 import 'package:mapbox_gl/src/trip.dart';
 
 // ignore: must_be_immutable
@@ -48,33 +49,26 @@ class MapWithTripState extends State<MapWithTrip> {
     //controller.onLineTapped.add(_onLineTapped);
   }
 
-  static Color fromHex(String hexString) {
-    final buffer = StringBuffer();
-    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
-    buffer.write(hexString.replaceFirst('#', ''));
-    return Color(int.parse(buffer.toString(), radix: 16));
-  }
-
   Future<void> addStartImageAsset(String color, GpsLocation event) async {
     final String assetName = widget.startIconPath;
     final svgString = await rootBundle.loadString(assetName);
     final DrawableRoot svgRoot = await svg.fromSvgString(svgString, "");
-    final ui.Picture picture = svgRoot.toPicture(colorFilter: ColorFilter.mode(fromHex(color), BlendMode.srcIn));
+    final ui.Picture picture = svgRoot.toPicture(colorFilter: ColorFilter.mode(Constants.fromHex(color), BlendMode.srcIn));
     final ui.Image _image = await picture.toImage(90, 90);
     final ByteData bytes = await _image.toByteData(format: ui.ImageByteFormat.png);
     final Uint8List list = bytes.buffer.asUint8List();
-    String iconName = "start"+color.replaceAll("#", "_");
+    String iconName = "start_"+color.replaceAll("#", "_");
     await controller.addImage(iconName, list).whenComplete(() => _addEvent(event, iconName));
   }
   Future<void> addEndImageAsset(String color, GpsLocation event) async {
     final String assetName = widget.endIconPath;
     final svgString = await rootBundle.loadString(assetName);
     final DrawableRoot svgRoot = await svg.fromSvgString(svgString, "");
-    final ui.Picture picture = svgRoot.toPicture(colorFilter: ColorFilter.mode(fromHex(color), BlendMode.srcIn));
+    final ui.Picture picture = svgRoot.toPicture(colorFilter: ColorFilter.mode(Constants.fromHex(color), BlendMode.srcIn));
     final ui.Image _image = await picture.toImage(90, 90);
     final ByteData bytes = await _image.toByteData(format: ui.ImageByteFormat.png);
     final Uint8List list = bytes.buffer.asUint8List();
-    String iconName = "stop"+color.replaceAll("#", "_");
+    String iconName = "stop_"+color.replaceAll("#", "_");
     await controller.addImage(iconName, list).whenComplete(() => _addEvent(event, iconName));
   }
 
@@ -105,18 +99,6 @@ class MapWithTripState extends State<MapWithTrip> {
   }
 
   /**
-   * Calculates the distance between two coordinates
-   */
-  double calculateDistance(lat1, lon1, lat2, lon2){
-    var p = 0.017453292519943295;
-    var c = cos;
-    var a = 0.5 - c((lat2 - lat1) * p)/2 +
-        c(lat1 * p) * c(lat2 * p) *
-            (1 - c((lon2 - lon1) * p))/2;
-    return 12742 * asin(sqrt(a));
-  }
-
-  /**
    * If I click on the map it returns the coordinate of the nearest route, if it is more than 20 meters away it returns the coordinate of the point where we clicked
    */
   void _onMapClicked(Point<double> point, LatLng latLng) {
@@ -144,8 +126,17 @@ class MapWithTripState extends State<MapWithTrip> {
    * Once loaded, the map draws the pre-specified route and indicates the Start-Stop event
    */
   void onStyleLoadedCallback() {
-    setUpTrips();
-    controller.moveCamera(CameraUpdate.newLatLngBounds(boundsFromLatLngList()));
+    if(widget.tripData != null && widget.tripData.isNotEmpty) {
+      setUpTrips();
+      List<LatLng> list = new List<LatLng>();
+      widget.tripData.map((e) => e.coordinates).forEach((element) {
+        element.forEach((gpsLocation) {
+          list.add(LatLng(gpsLocation.lat, gpsLocation.long));
+        });
+      });
+      controller.moveCamera(
+          CameraUpdate.newLatLngBounds(Constants.boundsFromLatLngList(list)));
+    }
     widget.onStyleLoaded();
   }
 
@@ -185,9 +176,7 @@ class MapWithTripState extends State<MapWithTrip> {
   void _addEvent(GpsLocation event, String icon) {
     if (event != null) {
       controller.addSymbol(
-          _getSymbolOptions(icon, event.time, "#ff0000",
-              LatLng(event.lat,event.long), event.time.toString()),
-          {'eventId': event.time}
+          Constants.getSymbolOptions(icon, LatLng(event.lat,event.long), event.time.toString()), {'eventId': event.time}
       );
       print("addEvent " + icon);
       eventCount += 1;
@@ -196,70 +185,7 @@ class MapWithTripState extends State<MapWithTrip> {
       });
     }
   }
-  SymbolOptions _getSymbolOptions(String iconImage, int symbolCount, String iconColor, LatLng coordinates, String name){
-    return SymbolOptions(
-      geometry: coordinates,
-      iconImage: iconImage,
-      iconColor: iconColor,
-      textField: "",
-      textSize: 12.0,
-      iconOffset: Offset(0.0,-10.0),
-      textAnchor: "top",
-      textColor: "#00000000",
-      iconSize: _getSymbolIconSize()
-    );
-  }
-  double _getSymbolIconSize() {
-    if (Platform.isAndroid) {
-      return 1.0;
-    } else if (Platform.isIOS) {
-      return 0.5;
-    }
-  }
-  LatLngBounds boundsFromLatLngList() {
-    assert(widget.tripData.isNotEmpty);
 
-    List<LatLng> list = new List<LatLng>();
-    widget.tripData.forEach((trip) {
-      trip.coordinates.forEach((element) {
-        list.add(LatLng(element.lat, element.long));
-      });
-    });
-    double x0, x1, y0, y1;
-    for (LatLng latLng in list) {
-      if (x0 == null) {
-        x0 = x1 = latLng.latitude;
-        y0 = y1 = latLng.longitude;
-      } else {
-        if (latLng.latitude > x1) x1 = latLng.latitude;
-        if (latLng.latitude < x0) x0 = latLng.latitude;
-        if (latLng.longitude > y1) y1 = latLng.longitude;
-        if (latLng.longitude < y0) y0 = latLng.longitude;
-      }
-    }
-
-
-    //if no data provided, hungary bounds default
-    if (x0 == null || y0 == null || x1 == null || y1 == null) {
-      x0 = 46;
-      y0 = 16;
-      x1 = 47;
-      y1 = 22;
-    }
-
-
-    // OPTIONAL - Add some extra "padding" for better map display
-    double padding = 1;
-    double south = x0 - padding;
-    double west = y0 - padding;
-    double north = x1 + padding;
-    double east = y1 + padding;
-
-    LatLng northeast = LatLng(north, east);
-    LatLng southwest = LatLng(south, west);
-
-    return LatLngBounds(northeast: northeast, southwest: southwest);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -268,6 +194,7 @@ class MapWithTripState extends State<MapWithTrip> {
       onMapCreated: _onMapCreated,
       onStyleLoadedCallback: onStyleLoadedCallback,
       onMapClick: _onMapClicked,
+      styleString: Constants.MAP_TILE_JSON,
       initialCameraPosition: CameraPosition(
         target: LatLng(47,19),
         zoom: 11.0,

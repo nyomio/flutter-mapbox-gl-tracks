@@ -54,6 +54,16 @@ flutter:
     - assets/symbols/stop.svg
     - assets/symbols/start.svg
     - assets/symbols/pause.svg
+    - assets/mickey.png
+    - assets/devicon4.png
+    - assets/devicon5.png
+    - assets/devicon6.png
+    - assets/devicon7.png
+    - assets/devicon8.png
+    - assets/devicon9.png
+    - assets/devicon10.png
+    - assets/devicon11.png
+    - assets/devicon12.png
     - assets/style.json
     - assets/sydney.png
 

@@ -11,8 +11,13 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:mapbox_gl/src/Constants.dart';
 
 import 'tracker_model.dart';
+
+import 'package:image/image.dart' as image;
+import 'package:flutter/services.dart';
+
 
 // ignore: must_be_immutable
 class TrackerMap extends StatefulWidget {
@@ -91,16 +96,6 @@ class TrackerMapState extends State<TrackerMap> {
   }
 
   /**
-   * Calculates the distance between two coordinates
-   */
-  double calculateDistance(lat1, lon1, lat2, lon2) {
-    var p = 0.017453292519943295;
-    var c = cos;
-    var a = 0.5 - c((lat2 - lat1) * p) / 2 + c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p)) / 2;
-    return 12742 * asin(sqrt(a));
-  }
-
-  /**
    * If I click on the map it returns the coordinate of the nearest route, if it is more than 20 meters away it returns the coordinate of the point where we clicked
    */
   void _onMapClicked(Point<double> point, LatLng latLng) {}
@@ -122,23 +117,38 @@ class TrackerMapState extends State<TrackerMap> {
     });
     Map<dynamic, dynamic> data = symbol.data;
     var trackerId = data["trackerId"];
-    widget.trackerPressCallback(TrackerModel(trackerId, symbol.options.geometry, symbol.options.iconColor, symbol.options.iconImage));
+    var markerImage = data["markerImage"];
+    widget.trackerPressCallback(TrackerModel(trackerId, symbol.options.geometry, symbol.options.iconColor, markerImage, symbol.options.iconImage));
   }
 
-  static Color fromHex(String hexString) {
-    final buffer = StringBuffer();
-    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
-    buffer.write(hexString.replaceFirst('#', ''));
-    return Color(int.parse(buffer.toString(), radix: 16));
+  Future<ui.Image> getUiImage(String imageAssetPath, int height, int width) async {
+    final ByteData assetImageByteData = await rootBundle.load(imageAssetPath);
+    image.Image baseSizeImage = image.decodeImage(assetImageByteData.buffer.asUint8List());
+    image.Image resizeImage = image.copyResize(baseSizeImage, height: height, width: width);
+    ui.Codec codec = await ui.instantiateImageCodec(image.encodePng(resizeImage));
+    ui.FrameInfo frameInfo = await codec.getNextFrame();
+    return frameInfo.image;
   }
-
-  Future _makeIconFromSVGAsset(String path, String name, String color) async {
+  Future _makeIconFromSVGAsset(String path, String markerImagePath, String name, String color) async {
+    final recorder = new ui.PictureRecorder();
+    final canvas = new Canvas(
+        recorder,
+        new Rect.fromPoints(
+            new Offset(0.0, 0.0), new Offset(90.0, 90.0)));
     final String assetName = path;
     final svgString = await rootBundle.loadString(assetName);
     final DrawableRoot svgRoot = await svg.fromSvgString(svgString, "");
-    final ui.Picture picture = svgRoot.toPicture(colorFilter: ColorFilter.mode(fromHex(color), BlendMode.srcIn));
+    final ui.Picture picture = svgRoot.toPicture(colorFilter: ColorFilter.mode(Constants.fromHex(color), BlendMode.srcIn));
     final ui.Image _image = await picture.toImage(90, 90);
-    final ByteData bytes = await _image.toByteData(format: ui.ImageByteFormat.png);
+    canvas.drawImage(_image, Offset(0.0,0.0), new Paint());
+    if (markerImagePath != null && markerImagePath != "") {
+      final ui.Image _markerImage = await getUiImage(markerImagePath, 50, 50);
+      Paint paint = new Paint();
+      canvas.drawImage(_markerImage, Offset(20.0, 20.0), paint);
+    }
+    final mergedPicture = recorder.endRecording();
+    final img = await mergedPicture.toImage(90, 90);
+    final bytes = await img.toByteData(format: ui.ImageByteFormat.png);
     final Uint8List list = bytes.buffer.asUint8List();
     await controller.addImage(name, list);
   }
@@ -151,44 +161,20 @@ class TrackerMapState extends State<TrackerMap> {
     if (widgetTrackers == null) widgetTrackers = new List<TrackerModel>();
     widgetTrackers.add(tracker);
     String trackerColor = tracker.color;
-    String trackerIconName = "marker" + tracker.id.toString() + tracker.color.replaceAll("#", "");
-    await _makeIconFromSVGAsset(tracker.iconImage, trackerIconName, trackerColor);
+    String trackerIconName = getTrackerIconName("marker_",tracker.id,tracker.color);
+    await _makeIconFromSVGAsset(tracker.iconImage, tracker.markerImage, trackerIconName, trackerColor);
     await _imageAdded(tracker);
   }
 
-  SymbolOptions _getSymbolOptions(String iconImage, LatLng coordinates, String name) {
-    LatLng geometry = LatLng(
-      coordinates.latitude,
-      coordinates.longitude,
-    );
-
-    return SymbolOptions(
-        geometry: geometry,
-        iconImage: iconImage,
-        iconOffset: Offset(0, 0),
-        iconOpacity: 1.0,
-        iconAnchor: "bottom",
-        iconSize: _getSymbolIconSize(),
-        textField: "",
-        textSize: 12.0,
-        textAnchor: "top",
-        textColor: "#00000000");
-  }
-
-  double _getSymbolIconSize() {
-    if (Platform.isAndroid) {
-      return 1.0;
-    } else if (Platform.isIOS) {
-      return 0.5;
-    }
+  String getTrackerIconName(String base, int id, String color) {
+    return  base + id.toString() + color.replaceAll("#", "_");
   }
 
   Future _imageAdded(TrackerModel tracker) async {
     _imageCount = 0;
     print("_imageAdded " + tracker.id.toString());
-    String trackerColor = tracker.color;
-    String trackerIconName = "marker" + tracker.id.toString() + tracker.color.replaceAll("#", "");
-    await controller.addSymbol(_getSymbolOptions(trackerIconName, tracker.coordinates, tracker.id.toString()), {'trackerId': tracker.id});
+    String trackerIconName = getTrackerIconName("marker_",tracker.id,tracker.color);
+    await controller.addSymbol(Constants.getSymbolOptions(trackerIconName, tracker.coordinates, tracker.id.toString()), {'trackerId': tracker.id, 'markerImage': tracker.markerImage});
     setState(() {
       _symbolCount += 1;
     });
@@ -202,14 +188,18 @@ class TrackerMapState extends State<TrackerMap> {
     }
   }
 
+  LatLngBounds boundsFromLatLngList(){
+    return Constants.boundsFromLatLngList(widget.trackers.map((e) => e.coordinates));
+  }
+
   Future _addImages(List<TrackerModel> trackers) async {
     if (widgetTrackers == null) widgetTrackers = new List<TrackerModel>();
     widgetTrackers.addAll(trackers);
     _imageCount = 0;
     for (TrackerModel tracker in trackers) {
       String trackerColor = tracker.color;
-      String trackerIconName = "marker" + tracker.id.toString() + tracker.color.replaceAll("#", "");
-      await _makeIconFromSVGAsset(tracker.iconImage, trackerIconName, trackerColor);
+      String trackerIconName = getTrackerIconName("marker_",tracker.id,tracker.color);
+      await _makeIconFromSVGAsset(tracker.iconImage, tracker.markerImage, trackerIconName,  trackerColor);
       await _imagesAdded(trackers);
     }
   }
@@ -224,15 +214,15 @@ class TrackerMapState extends State<TrackerMap> {
   Future addTrackers(List<TrackerModel> trackers) async {
     if (trackers != null && trackers.isNotEmpty) {
       trackers.forEach((tracker) {
-        String trackerIconName = "marker" + tracker.id.toString() + tracker.color.replaceAll("#", "");
+        String trackerIconName = getTrackerIconName("marker_",tracker.id,tracker.color);
         tracker.iconImage = trackerIconName;
-        controller.addSymbol(_getSymbolOptions(tracker.iconImage, tracker.coordinates, tracker.id.toString()), {'trackerId': tracker.id});
+        controller.addSymbol(Constants.getSymbolOptions(tracker.iconImage, tracker.coordinates, tracker.id.toString()), {'trackerId': tracker.id, 'markerImage': tracker.markerImage});
       });
 
       setState(() {
         _symbolCount += trackers.length;
       });
-      await controller.moveCamera(CameraUpdate.newLatLngBounds(boundsFromLatLngList()));
+      await controller.moveCamera(CameraUpdate.newLatLngBounds(Constants.boundsFromLatLngList(widget.trackers.map((e) => e.coordinates))));
     }
   }
 
@@ -345,46 +335,7 @@ class TrackerMapState extends State<TrackerMap> {
     );
   }
 
-  LatLngBounds boundsFromLatLngList() {
-    if (widget.trackers.isEmpty) return LatLngBounds();
 
-    List<LatLng> list = [];
-    widget.trackers.forEach((element) {
-      list.add(element.coordinates);
-    });
-    double x0, x1, y0, y1;
-    for (LatLng latLng in list) {
-      if (x0 == null) {
-        x0 = x1 = latLng.latitude;
-        y0 = y1 = latLng.longitude;
-      } else {
-        if (latLng.latitude > x1) x1 = latLng.latitude;
-        if (latLng.latitude < x0) x0 = latLng.latitude;
-        if (latLng.longitude > y1) y1 = latLng.longitude;
-        if (latLng.longitude < y0) y0 = latLng.longitude;
-      }
-    }
-
-    //if no data provided, hungary bounds default
-    if (x0 == null || y0 == null || x1 == null || y1 == null) {
-      x0 = 46;
-      y0 = 16;
-      x1 = 47;
-      y1 = 22;
-    }
-
-    // OPTIONAL - Add some extra "padding" for better map display
-    double padding = 1;
-    double south = x0 - padding;
-    double west = y0 - padding;
-    double north = x1 + padding;
-    double east = y1 + padding;
-
-    LatLng northeast = LatLng(north, east);
-    LatLng southwest = LatLng(south, west);
-
-    return LatLngBounds(northeast: northeast, southwest: southwest);
-  }
 
   LatLng initialPosition() {
     if (widget.trackers.isNotEmpty)
@@ -400,6 +351,7 @@ class TrackerMapState extends State<TrackerMap> {
       onMapCreated: _onMapCreated,
       onStyleLoadedCallback: onStyleLoadedCallback,
       onMapClick: _onMapClicked,
+      styleString: Constants.MAP_TILE_JSON,
       initialCameraPosition: CameraPosition(
         target: initialPosition(),
         zoom: 11.0,

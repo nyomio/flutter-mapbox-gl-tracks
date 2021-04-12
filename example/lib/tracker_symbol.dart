@@ -48,24 +48,24 @@ class TrackerSymbolBodyState extends State<TrackerSymbolBody> {
   static final LatLng center = const LatLng(47.506363, 19.049595);
   List<TrackerModel> getTrackerList() {
     return [
-      TrackerModel(0,LatLng(47.49899088279303, 19.043703967040038),"#0000ff",startMarkerIconPath),
-      TrackerModel(1,LatLng(47.499447697783566, 19.046033787747366),"#ff0000",stopMarkerIconPath),
-      TrackerModel(2,LatLng(47.49853810834857, 19.041404693330232),"#00ff00",baseMarkerIconPath),
-      TrackerModel(3,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),18.05142+(Random().nextInt(9).toDouble()/10)),"#ffff00",pauseMarkerIconPath),
-      TrackerModel(4,LatLng(45.10123+(Random().nextInt(9).toDouble()/10),18.05142+(Random().nextInt(9).toDouble()/10)),"#ffff00",startMarkerIconPath),
-      TrackerModel(5,LatLng(49.10123+(Random().nextInt(9).toDouble()/10),15.05142+(Random().nextInt(9).toDouble()/10)),"#ff0000",stopMarkerIconPath),
-      TrackerModel(6,LatLng(47.02123+(Random().nextInt(9).toDouble()/10),19.04142+(Random().nextInt(9).toDouble()/10)),"#0000ff",baseMarkerIconPath),
-      TrackerModel(7,LatLng(47.15123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#00ffff",pauseMarkerIconPath),
-      TrackerModel(8,LatLng(48.10123+(Random().nextInt(9).toDouble()/10),19.15142+(Random().nextInt(9).toDouble()/10)),"#0000ff",stopMarkerIconPath),
-      TrackerModel(10,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),18.25142+(Random().nextInt(9).toDouble()/10)),"#00ffff",startMarkerIconPath),
-      TrackerModel(11,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),16.05142+(Random().nextInt(9).toDouble()/10)),"#00ff00",baseMarkerIconPath),
-      TrackerModel(12,LatLng(48.15123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#0000ff",stopMarkerIconPath)
+      TrackerModel(0,LatLng(47.49899088279303, 19.043703967040038),"#0000ff", "assets/devicon4.png",baseMarkerIconPath),
+      TrackerModel(1,LatLng(47.499447697783566, 19.046033787747366),"#ff0000", "assets/devicon5.png",baseMarkerIconPath),
+      TrackerModel(2,LatLng(47.49853810834857, 19.041404693330232),"#00ff00", "assets/devicon6.png",baseMarkerIconPath),
+      TrackerModel(3,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),18.05142+(Random().nextInt(9).toDouble()/10)),"#ffff00", "assets/devicon7.png",baseMarkerIconPath),
+      TrackerModel(4,LatLng(45.10123+(Random().nextInt(9).toDouble()/10),18.05142+(Random().nextInt(9).toDouble()/10)),"#ffff00", "assets/devicon8.png",baseMarkerIconPath),
+      TrackerModel(5,LatLng(49.10123+(Random().nextInt(9).toDouble()/10),15.05142+(Random().nextInt(9).toDouble()/10)),"#ff0000", "assets/devicon9.png",baseMarkerIconPath),
+      TrackerModel(6,LatLng(47.02123+(Random().nextInt(9).toDouble()/10),19.04142+(Random().nextInt(9).toDouble()/10)),"#0000ff", "assets/devicon10.png",baseMarkerIconPath),
+      TrackerModel(7,LatLng(47.15123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#00ffff", "assets/devicon11.png",baseMarkerIconPath),
+      TrackerModel(8,LatLng(48.10123+(Random().nextInt(9).toDouble()/10),19.15142+(Random().nextInt(9).toDouble()/10)),"#0000ff", "assets/devicon12.png",baseMarkerIconPath),
+      TrackerModel(10,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),18.25142+(Random().nextInt(9).toDouble()/10)),"#00ffff", "",startMarkerIconPath),
+      TrackerModel(11,LatLng(47.10123+(Random().nextInt(9).toDouble()/10),16.05142+(Random().nextInt(9).toDouble()/10)),"#00ff00", "assets/devicon5.png",baseMarkerIconPath),
+      TrackerModel(12,LatLng(48.15123+(Random().nextInt(9).toDouble()/10),19.05142+(Random().nextInt(9).toDouble()/10)),"#0000ff", "",stopMarkerIconPath)
     ];
   }
   List<TrackerModel> getTrackerList2() {
     return [
-      TrackerModel(0,LatLng(47.49899088279303, 20.043703967040038),"#ff0000",startMarkerIconPath),
-      TrackerModel(1,LatLng(47.499447697783566, 19.046033787747366),"#ff0000",stopMarkerIconPath)
+      TrackerModel(0,LatLng(47.49899088279303, 20.043703967040038),"#ff0000", "",startMarkerIconPath),
+      TrackerModel(1,LatLng(47.499447697783566, 19.046033787747366),"#ff0000", "",stopMarkerIconPath)
     ];
   }
   void _onStyleLoaded() {
