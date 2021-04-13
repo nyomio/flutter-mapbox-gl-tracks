@@ -106,11 +106,7 @@ class TrackerMapState extends State<TrackerMap> {
   void onStyleLoadedCallback() {
     if (widget.trackers != null && widget.trackers.isNotEmpty) {
       _addImages(widget.trackers);
-      List<LatLng> coordinates = new List<LatLng>();
-      widget.trackers.forEach((element) {
-        coordinates.add(element.coordinates);
-      });
-      controller.moveCamera(CameraUpdate.newLatLngBounds(Constants.boundsFromLatLngList(coordinates)));
+
     }
     // addAllTracker(widget.trackers)
     widget.onStyleLoaded();
@@ -211,6 +207,11 @@ class TrackerMapState extends State<TrackerMap> {
       await _makeIconFromSVGAsset(tracker.markerImage, tracker.iconImage, trackerIconName,  trackerColor);
       await _imagesAdded(trackers);
     }
+    List<LatLng> coordinates = new List<LatLng>();
+    widget.trackers.forEach((element) {
+      coordinates.add(element.coordinates);
+    });
+    controller.moveCamera(CameraUpdate.newLatLngBounds(Constants.boundsFromLatLngList(coordinates)));
   }
 
   Future replaceTrackers(List<TrackerModel> trackers) async {
@@ -365,7 +366,7 @@ class TrackerMapState extends State<TrackerMap> {
         target: initialPosition(),
         zoom: 11.0,
       ),
-      minMaxZoomPreference: MinMaxZoomPreference(5, 16),
+      minMaxZoomPreference: MinMaxZoomPreference(0, 16),
       //cameraTargetBounds: CameraTargetBounds(boundsFromLatLngList()),
     );
   }
