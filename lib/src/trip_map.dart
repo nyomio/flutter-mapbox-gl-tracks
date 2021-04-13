@@ -129,13 +129,13 @@ class MapWithTripState extends State<MapWithTrip> {
     if(widget.tripData != null && widget.tripData.isNotEmpty) {
       setUpTrips();
       List<LatLng> list = new List<LatLng>();
-      widget.tripData.map((e) => e.coordinates).forEach((element) {
-        element.forEach((gpsLocation) {
-          list.add(LatLng(gpsLocation.lat, gpsLocation.long));
+      widget.tripData.forEach((e) {
+        e.coordinates.forEach((element) {
+            list.add(LatLng(element.lat, element.long));
         });
       });
-      controller.moveCamera(
-          CameraUpdate.newLatLngBounds(Constants.boundsFromLatLngList(list)));
+
+      controller.moveCamera(CameraUpdate.newLatLngBounds(Constants.boundsFromLatLngList(list)));
     }
     widget.onStyleLoaded();
   }

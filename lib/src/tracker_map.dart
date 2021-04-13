@@ -106,6 +106,11 @@ class TrackerMapState extends State<TrackerMap> {
   void onStyleLoadedCallback() {
     if (widget.trackers != null && widget.trackers.isNotEmpty) {
       _addImages(widget.trackers);
+      List<LatLng> coordinates = new List<LatLng>();
+      widget.trackers.forEach((element) {
+        coordinates.add(element.coordinates);
+      });
+      controller.moveCamera(CameraUpdate.newLatLngBounds(Constants.boundsFromLatLngList(coordinates)));
     }
     // addAllTracker(widget.trackers)
     widget.onStyleLoaded();
@@ -144,6 +149,7 @@ class TrackerMapState extends State<TrackerMap> {
     if (markerImagePath != null && markerImagePath != "") {
       final ui.Image _markerImage = await getUiImage(markerImagePath, 50, 50);
       Paint paint = new Paint();
+      paint.colorFilter = ColorFilter.mode(Constants.fromHex("#ffffff"), BlendMode.srcIn);
       canvas.drawImage(_markerImage, Offset(20.0, 20.0), paint);
     }
     final mergedPicture = recorder.endRecording();
@@ -222,12 +228,12 @@ class TrackerMapState extends State<TrackerMap> {
       setState(() {
         _symbolCount += trackers.length;
       });
-      await controller.moveCamera(CameraUpdate.newLatLngBounds(Constants.boundsFromLatLngList(widget.trackers.map((e) => e.coordinates))));
     }
   }
 
   Future removeTracker(int trackerId) async {
     if (trackerId != null) {
+      widgetTrackers.removeWhere((element) => element.id == trackerId);
       _selectedSymbol = controller.symbols.firstWhere((element) => element.data["trackerId"] == trackerId);
       await controller.removeSymbol(_selectedSymbol);
       setState(() {
