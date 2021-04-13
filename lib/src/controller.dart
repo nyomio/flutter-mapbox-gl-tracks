@@ -95,8 +95,13 @@ class MapboxMapController extends ChangeNotifier {
       notifyListeners();
     });
 
-    MapboxGlPlatform.getInstance(_id).onCameraIdlePlatform.add((_) {
+    MapboxGlPlatform.getInstance(_id)
+        .onCameraIdlePlatform
+        .add((cameraPosition) {
       _isCameraMoving = false;
+      if (cameraPosition != null) {
+        _cameraPosition = cameraPosition;
+      }
       if (onCameraIdle != null) {
         onCameraIdle();
       }
@@ -142,7 +147,9 @@ class MapboxMapController extends ChangeNotifier {
         onMapIdle();
       }
     });
-    MapboxGlPlatform.getInstance(_id).onUserLocationUpdatedPlatform.add((location) { 
+    MapboxGlPlatform.getInstance(_id)
+        .onUserLocationUpdatedPlatform
+        .add((location) {
       onUserLocationUpdated?.call(location);
     });
   }
@@ -355,6 +362,14 @@ class MapboxMapController extends ChangeNotifier {
     return result.first;
   }
 
+  /// Adds multiple symbols to the map, configured using the specified custom
+  /// [options].
+  ///
+  /// Change listeners are notified once the symbol has been added on the
+  /// platform side.
+  ///
+  /// The returned [Future] completes with the added symbol once listeners have
+  /// been notified.
   Future<List<Symbol>> addSymbols(List<SymbolOptions> options,
       [List<Map> data]) async {
     final List<SymbolOptions> effectiveOptions =
@@ -410,13 +425,18 @@ class MapboxMapController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Removes the specified [symbols] from the map. The symbols must be current
+  /// members of the [symbols] set.
+  ///
+  /// Change listeners are notified once the symbol has been removed on the
+  /// platform side.
+  ///
+  /// The returned [Future] completes once listeners have been notified.
   Future<void> removeSymbols(Iterable<Symbol> symbols) async {
-    assert(symbols.length > 0);
-    symbols.forEach((s) {
-      assert(_symbols[s.id] == s);
-    });
+    final ids = symbols.where((s) => _symbols[s.id] == s).map((s) => s.id);
+    assert(symbols.length == ids.length);
 
-    await _removeSymbols(symbols.map((s) => s.id));
+    await _removeSymbols(ids);
     notifyListeners();
   }
 
@@ -428,8 +448,8 @@ class MapboxMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearSymbols() async {
     assert(_symbols != null);
-    final List<String> symbolIds = List<String>.from(_symbols.keys);
-    _removeSymbols(symbolIds);
+    await MapboxGlPlatform.getInstance(_id).removeLines(_symbols.keys);
+    _symbols.clear();
     notifyListeners();
   }
 
@@ -460,8 +480,24 @@ class MapboxMapController extends ChangeNotifier {
     return line;
   }
 
+  /// Adds multiple lines to the map, configured using the specified custom [options].
+  ///
+  /// Change listeners are notified once the lines have been added on the
+  /// platform side.
+  ///
+  /// The returned [Future] completes with the added line once listeners have
+  /// been notified.
+  Future<List<Line>> addLines(List<LineOptions> options,
+      [List<Map> data]) async {
+    final lines =
+        await MapboxGlPlatform.getInstance(_id).addLines(options, data);
+    lines.forEach((l) => _lines[l.id] = l);
+    notifyListeners();
+    return lines;
+  }
+
   /// Updates the specified [line] with the given [changes]. The line must
-  /// be a current member of the [lines] set.
+  /// be a current member of the [lines] set.‚
   ///
   /// Change listeners are notified once the line has been updated on the
   /// platform side.
@@ -498,7 +534,25 @@ class MapboxMapController extends ChangeNotifier {
   Future<void> removeLine(Line line) async {
     assert(line != null);
     assert(_lines[line.id] == line);
-    await _removeLine(line.id);
+
+    await MapboxGlPlatform.getInstance(_id).removeLine(line.id);
+    _lines.remove(line.id);
+    notifyListeners();
+  }
+
+  /// Removes the specified [lines] from the map. The lines must be current
+  /// members of the [lines] set.
+  ///
+  /// Change listeners are notified once the lines have been removed on the
+  /// platform side.
+  ///
+  /// The returned [Future] completes once listeners have been notified.
+  Future<void> removeLines(Iterable<Line> lines) async {
+    final ids = lines.where((l) => _lines[l.id] == l).map((l) => l.id);
+    assert(lines.length == ids.length);
+
+    await MapboxGlPlatform.getInstance(_id).removeLines(ids);
+    ids.forEach((id) => _lines.remove(id));
     notifyListeners();
   }
 
@@ -511,20 +565,9 @@ class MapboxMapController extends ChangeNotifier {
   Future<void> clearLines() async {
     assert(_lines != null);
     final List<String> lineIds = List<String>.from(_lines.keys);
-    for (String id in lineIds) {
-      await _removeLine(id);
-    }
+    await MapboxGlPlatform.getInstance(_id).removeLines(lineIds);
+    _lines.clear();
     notifyListeners();
-  }
-
-  /// Helper method to remove a single line from the map. Consumed by
-  /// [removeLine] and [clearLines].
-  ///
-  /// The returned [Future] completes once the line has been removed from
-  /// [_lines].
-  Future<void> _removeLine(String id) async {
-    await MapboxGlPlatform.getInstance(_id).removeLine(id);
-    _lines.remove(id);
   }
 
   /// Adds a circle to the map, configured using the specified custom [options].
@@ -542,6 +585,23 @@ class MapboxMapController extends ChangeNotifier {
     _circles[circle.id] = circle;
     notifyListeners();
     return circle;
+  }
+
+  /// Adds multiple circles to the map, configured using the specified custom
+  /// [options].
+  ///
+  /// Change listeners are notified once the circles have been added on the
+  /// platform side.
+  ///
+  /// The returned [Future] completes with the added circle once listeners have
+  /// been notified.
+  Future<List<Circle>> addCircles(List<CircleOptions> options,
+      [List<Map> data]) async {
+    final circles =
+        await MapboxGlPlatform.getInstance(_id).addCircles(options, data);
+    circles.forEach((c) => _circles[c.id] = c);
+    notifyListeners();
+    return circles;
   }
 
   /// Updates the specified [circle] with the given [changes]. The circle must
@@ -582,7 +642,27 @@ class MapboxMapController extends ChangeNotifier {
   Future<void> removeCircle(Circle circle) async {
     assert(circle != null);
     assert(_circles[circle.id] == circle);
-    await _removeCircle(circle.id);
+
+    await MapboxGlPlatform.getInstance(_id).removeCircle(circle.id);
+    _circles.remove(circle.id);
+
+    notifyListeners();
+  }
+
+  /// Removes the specified [circles] from the map. The circles must be current
+  /// members of the [circles] set.
+  ///
+  /// Change listeners are notified once the circles have been removed on the
+  /// platform side.
+  ///
+  /// The returned [Future] completes once listeners have been notified.
+  Future<void> removeCircles(Iterable<Circle> circles) async {
+    assert(circles != null);
+    final ids = circles.where((c) => _circles[c.id] == c).map((c) => c.id);
+    assert(circles.length == ids.length);
+
+    await MapboxGlPlatform.getInstance(_id).removeCircles(ids);
+    ids.forEach((id) => _circles.remove(id));
     notifyListeners();
   }
 
@@ -594,22 +674,10 @@ class MapboxMapController extends ChangeNotifier {
   /// The returned [Future] completes once listeners have been notified.
   Future<void> clearCircles() async {
     assert(_circles != null);
-    final List<String> circleIds = List<String>.from(_circles.keys);
-    for (String id in circleIds) {
-      await _removeCircle(id);
-    }
+    await MapboxGlPlatform.getInstance(_id).removeCircles(_circles.keys);
+    _circles.clear();
+
     notifyListeners();
-  }
-
-  /// Helper method to remove a single circle from the map. Consumed by
-  /// [removeCircle] and [clearCircles].
-  ///
-  /// The returned [Future] completes once the circle has been removed from
-  /// [_circles].
-  Future<void> _removeCircle(String id) async {
-    await MapboxGlPlatform.getInstance(_id).removeCircle(id);
-
-    _circles.remove(id);
   }
 
   /// Adds a fill to the map, configured using the specified custom [options].
@@ -622,10 +690,28 @@ class MapboxMapController extends ChangeNotifier {
   Future<Fill> addFill(FillOptions options, [Map data]) async {
     final FillOptions effectiveOptions =
         FillOptions.defaultOptions.copyWith(options);
-    final fill = await MapboxGlPlatform.getInstance(_id).addFill(effectiveOptions);
+    final fill =
+        await MapboxGlPlatform.getInstance(_id).addFill(effectiveOptions, data);
     _fills[fill.id] = fill;
     notifyListeners();
     return fill;
+  }
+
+  /// Adds multiple fills to the map, configured using the specified custom
+  /// [options].
+  ///
+  /// Change listeners are notified once the fills has been added on the
+  /// platform side.
+  ///
+  /// The returned [Future] completes with the added fills once listeners have
+  /// been notified.
+  Future<List<Fill>> addFills(List<FillOptions> options,
+      [List<Map> data]) async {
+    final circles =
+        await MapboxGlPlatform.getInstance(_id).addFills(options, data);
+    circles.forEach((f) => _fills[f.id] = f);
+    notifyListeners();
+    return circles;
   }
 
   /// Updates the specified [fill] with the given [changes]. The fill must
@@ -644,6 +730,20 @@ class MapboxMapController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Removes all [fill] from the map.
+  ///
+  /// Change listeners are notified once all fills have been removed on the
+  /// platform side.
+  ///
+  /// The returned [Future] completes once listeners have been notified.
+  Future<void> clearFills() async {
+    assert(_fills != null);
+    await MapboxGlPlatform.getInstance(_id).removeFills(_fills.keys);
+    _fills.clear();
+
+    notifyListeners();
+  }
+
   /// Removes the specified [fill] from the map. The fill must be a current
   /// member of the [fills] set.
   ///
@@ -654,19 +754,26 @@ class MapboxMapController extends ChangeNotifier {
   Future<void> removeFill(Fill fill) async {
     assert(fill != null);
     assert(_fills[fill.id] == fill);
-    await _removeFill(fill.id);
+    await MapboxGlPlatform.getInstance(_id).removeFill(fill.id);
+    _fills.remove(fill.id);
+
     notifyListeners();
   }
 
-  /// Helper method to remove a single fill from the map. Consumed by
-  /// [removeFill] and [clearFills].
+  /// Removes the specified [fills] from the map. The fills must be current
+  /// members of the [fills] set.
   ///
-  /// The returned [Future] completes once the fill has been removed from
-  /// [_fills].
-  Future<void> _removeFill(String id) async {
-    await MapboxGlPlatform.getInstance(_id).removeFill(id);
+  /// Change listeners are notified once the fills have been removed on the
+  /// platform side.
+  ///
+  /// The returned [Future] completes once listeners have been notified.
+  Future<void> removeFills(Iterable<Fill> fills) async {
+    final ids = fills.where((f) => _fills[f.id] == f).map((f) => f.id);
+    assert(fills.length == ids.length);
 
-    _fills.remove(id);
+    await MapboxGlPlatform.getInstance(_id).removeFills(ids);
+    ids.forEach((id) => _fills.remove(id));
+    notifyListeners();
   }
 
   Future<List> queryRenderedFeatures(
@@ -758,25 +865,34 @@ class MapboxMapController extends ChangeNotifier {
         .setSymbolTextIgnorePlacement(enable);
   }
 
-  /// Adds an image source to the style currently displayed in the map, so that it can later be referred to by the provided name.
-  Future<void> addImageSource(String name, Uint8List bytes, LatLngQuad coordinates) {
+  /// Adds an image source to the style currently displayed in the map, so that it can later be referred to by the provided id.
+  Future<void> addImageSource(
+      String imageSourceId, Uint8List bytes, LatLngQuad coordinates) {
     return MapboxGlPlatform.getInstance(_id)
-        .addImageSource(name, bytes, coordinates);
+        .addImageSource(imageSourceId, bytes, coordinates);
   }
 
-  /// Removes previously added image source by name
-  Future<void> removeImageSource(String name) {
-    return MapboxGlPlatform.getInstance(_id).removeImageSource(name);
+  /// Removes previously added image source by id
+  Future<void> removeImageSource(String imageSourceId) {
+    return MapboxGlPlatform.getInstance(_id).removeImageSource(imageSourceId);
   }
 
-  /// Adds layer with name
-  Future<void> addLayer(String name, String sourceId) {
-    return MapboxGlPlatform.getInstance(_id).addLayer(name, sourceId);
+  /// Adds a Mapbox style layer to the map's style at render time.
+  Future<void> addLayer(String imageLayerId, String imageSourceId) {
+    return MapboxGlPlatform.getInstance(_id)
+        .addLayer(imageLayerId, imageSourceId);
   }
 
-  /// Removes layer by name
-  Future<void> removeLayer(String name) {
-    return MapboxGlPlatform.getInstance(_id).removeLayer(name);
+  /// Adds a Mapbox style layer below the layer provided with belowLayerId to the map's style at render time,
+  Future<void> addLayerBelow(
+      String imageLayerId, String imageSourceId, String belowLayerId) {
+    return MapboxGlPlatform.getInstance(_id)
+        .addLayerBelow(imageLayerId, imageSourceId, belowLayerId);
+  }
+
+  /// Removes a Mapbox style layer
+  Future<void> removeLayer(String imageLayerId) {
+    return MapboxGlPlatform.getInstance(_id).removeLayer(imageLayerId);
   }
 
   /// Returns the point on the screen that corresponds to a geographical coordinate ([latLng]). The screen location is in screen pixels (not display pixels) relative to the top left of the map (not of the whole screen)
@@ -789,6 +905,10 @@ class MapboxMapController extends ChangeNotifier {
     return MapboxGlPlatform.getInstance(_id).toScreenLocation(latLng);
   }
 
+  Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs) async {
+    return MapboxGlPlatform.getInstance(_id).toScreenLocationBatch(latLngs);
+  }
+
   /// Returns the geographic location (as [LatLng]) that corresponds to a point on the screen. The screen location is specified in screen pixels (not display pixels) relative to the top left of the map (not the top left of the whole screen).
   Future<LatLng> toLatLng(Point screenLocation) async {
     return MapboxGlPlatform.getInstance(_id).toLatLng(screenLocation);
@@ -796,8 +916,8 @@ class MapboxMapController extends ChangeNotifier {
 
   /// Returns the distance spanned by one pixel at the specified [latitude] and current zoom level.
   /// The distance between pixels decreases as the latitude approaches the poles. This relationship parallels the relationship between longitudinal coordinates at different latitudes.
-  Future<double> getMetersPerPixelAtLatitude(double latitude) async{
-    return MapboxGlPlatform.getInstance(_id).getMetersPerPixelAtLatitude(latitude);
+  Future<double> getMetersPerPixelAtLatitude(double latitude) async {
+    return MapboxGlPlatform.getInstance(_id)
+        .getMetersPerPixelAtLatitude(latitude);
   }
-
 }

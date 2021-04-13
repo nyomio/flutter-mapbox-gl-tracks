@@ -24,6 +24,10 @@ public class CircleController implements CircleOptionsSink {
     this.onTappedListener = onTappedListener;
   }
 
+  public Circle getCircle(){
+    return this.circle;
+  }
+
   boolean onTap() {
     if (onTappedListener != null) {
       onTappedListener.onCircleTapped(circle);

@@ -5,6 +5,7 @@
 library mapbox_gl;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -20,6 +21,8 @@ export 'package:mapbox_gl_platform_interface/mapbox_gl_platform_interface.dart'
         LatLngBounds,
         LatLngQuad,
         CameraPosition,
+        UserLocation,
+        UserHeading,
         CameraUpdate,
         ArgumentCallbacks,
         Symbol,
@@ -37,7 +40,8 @@ export 'package:mapbox_gl_platform_interface/mapbox_gl_platform_interface.dart'
         Fill,
         FillOptions;
 
-
 part 'src/controller.dart';
 part 'src/mapbox_map.dart';
 part 'src/global.dart';
+part 'src/offline_region.dart';
+part 'src/download_region_status.dart';

@@ -5,14 +5,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
-import 'package:mapbox_gl_example/event_symbol.dart';
+import 'package:mapbox_gl_example/custom_marker.dart';
 import 'package:mapbox_gl_example/full_map.dart';
-import 'package:mapbox_gl_example/route_page.dart';
-import 'package:mapbox_gl_example/tracker_symbol.dart';
+import 'package:mapbox_gl_example/offline_regions.dart';
+import 'package:mapbox_gl_example/place_batch.dart';
 
 import 'animate_camera.dart';
+import 'annotation_order_maps.dart';
 import 'full_map.dart';
 import 'line.dart';
+import 'local_style.dart';
 import 'map_ui.dart';
 import 'move_camera.dart';
 import 'page.dart';
@@ -23,23 +25,27 @@ import 'place_fill.dart';
 import 'scrolling_map.dart';
 
 final List<ExamplePage> _allPages = <ExamplePage>[
-  TrackerSymbolPage(),
-  EventSymbolPage(),
-  RoutePage(),
-  /*MoveCameraPage(),
+  MapUiPage(),
+  FullMapPage(),
+  AnimateCameraPage(),
+  MoveCameraPage(),
   PlaceSymbolPage(),
   PlaceSourcePage(),
   LinePage(),
+  LocalStylePage(),
   PlaceCirclePage(),
   PlaceFillPage(),
-  ScrollingMapPage(),*/
+  ScrollingMapPage(),
+  OfflineRegionsPage(),
+  AnnotationOrderPage(),
+  CustomMarkerPage(),
+  BatchAddPage(),
 ];
 
 class MapsDemo extends StatelessWidget {
-
-  // Add your Mapbox access token here
+  //FIXME: Add your Mapbox access token here
   static const String ACCESS_TOKEN = "pk.eyJ1IjoibmFneWlzdHZhbiIsImEiOiJja2lxczJ0dXgxenJjMzFxajVmamJxdGJiIn0.R1muCmqEhEJLAzGPMhcC2A";
-
+  
   void _pushPage(BuildContext context, ExamplePage page) async {
     if (!kIsWeb) {
       final location = Location();
