@@ -122,8 +122,9 @@ class TrackerMapState extends State<TrackerMap> {
     });
     Map<dynamic, dynamic> data = symbol.data;
     var trackerId = data["trackerId"];
-    var markerImage = data["markerImage"];
-    widget.trackerPressCallback(TrackerModel(trackerId, symbol.options.geometry, symbol.options.iconColor, markerImage, symbol.options.iconImage));
+    var iconImage = data["iconImage"];
+    var markerImage = symbol.options.iconImage;
+    widget.trackerPressCallback(TrackerModel(trackerId, symbol.options.geometry, symbol.options.iconColor, iconImage, markerImage));
   }
 
   Future<ui.Image> getUiImage(String imageAssetPath, int height, int width) async {
@@ -134,23 +135,25 @@ class TrackerMapState extends State<TrackerMap> {
     ui.FrameInfo frameInfo = await codec.getNextFrame();
     return frameInfo.image;
   }
-  Future _makeIconFromSVGAsset(String path, String markerImagePath, String name, String color) async {
+  Future _makeIconFromSVGAsset(String markerImagePath, String iconImagePath, String name, String color) async {
     final recorder = new ui.PictureRecorder();
     final canvas = new Canvas(
         recorder,
         new Rect.fromPoints(
             new Offset(0.0, 0.0), new Offset(90.0, 90.0)));
-    final String assetName = path;
-    final svgString = await rootBundle.loadString(assetName);
+    final svgString = await rootBundle.loadString(markerImagePath);
     final DrawableRoot svgRoot = await svg.fromSvgString(svgString, "");
     final ui.Picture picture = svgRoot.toPicture(colorFilter: ColorFilter.mode(Constants.fromHex(color), BlendMode.srcIn));
     final ui.Image _image = await picture.toImage(90, 90);
     canvas.drawImage(_image, Offset(0.0,0.0), new Paint());
-    if (markerImagePath != null && markerImagePath != "") {
-      final ui.Image _markerImage = await getUiImage(markerImagePath, 50, 50);
+    if (iconImagePath != null && iconImagePath != "") {
+      final ui.Image iconImage = await getUiImage(iconImagePath, 50, 50);
       Paint paint = new Paint();
-      paint.colorFilter = ColorFilter.mode(Constants.fromHex("#ffffff"), BlendMode.srcIn);
-      canvas.drawImage(_markerImage, Offset(20.0, 20.0), paint);
+      /**
+       * Ha szines ikonok kellenek
+       */
+      //paint.colorFilter = ColorFilter.mode(Constants.fromHex("#ffffff"), BlendMode.srcIn);
+      canvas.drawImage(iconImage, Offset(20.0, 20.0), paint);
     }
     final mergedPicture = recorder.endRecording();
     final img = await mergedPicture.toImage(90, 90);
@@ -168,7 +171,7 @@ class TrackerMapState extends State<TrackerMap> {
     widgetTrackers.add(tracker);
     String trackerColor = tracker.color;
     String trackerIconName = getTrackerIconName("marker_",tracker.id,tracker.color);
-    await _makeIconFromSVGAsset(tracker.iconImage, tracker.markerImage, trackerIconName, trackerColor);
+    await _makeIconFromSVGAsset(tracker.markerImage, tracker.iconImage, trackerIconName, trackerColor);
     await _imageAdded(tracker);
   }
 
@@ -180,7 +183,7 @@ class TrackerMapState extends State<TrackerMap> {
     _imageCount = 0;
     print("_imageAdded " + tracker.id.toString());
     String trackerIconName = getTrackerIconName("marker_",tracker.id,tracker.color);
-    await controller.addSymbol(Constants.getSymbolOptions(trackerIconName, tracker.coordinates, tracker.id.toString()), {'trackerId': tracker.id, 'markerImage': tracker.markerImage});
+    await controller.addSymbol(Constants.getSymbolOptions(trackerIconName, tracker.coordinates, tracker.id.toString()), {'trackerId': tracker.id, 'iconImage': tracker.iconImage});
     setState(() {
       _symbolCount += 1;
     });
@@ -205,7 +208,7 @@ class TrackerMapState extends State<TrackerMap> {
     for (TrackerModel tracker in trackers) {
       String trackerColor = tracker.color;
       String trackerIconName = getTrackerIconName("marker_",tracker.id,tracker.color);
-      await _makeIconFromSVGAsset(tracker.iconImage, tracker.markerImage, trackerIconName,  trackerColor);
+      await _makeIconFromSVGAsset(tracker.markerImage, tracker.iconImage, trackerIconName,  trackerColor);
       await _imagesAdded(trackers);
     }
   }
@@ -222,7 +225,7 @@ class TrackerMapState extends State<TrackerMap> {
       trackers.forEach((tracker) {
         String trackerIconName = getTrackerIconName("marker_",tracker.id,tracker.color);
         tracker.iconImage = trackerIconName;
-        controller.addSymbol(Constants.getSymbolOptions(tracker.iconImage, tracker.coordinates, tracker.id.toString()), {'trackerId': tracker.id, 'markerImage': tracker.markerImage});
+        controller.addSymbol(Constants.getSymbolOptions(tracker.iconImage, tracker.coordinates, tracker.id.toString()), {'trackerId': tracker.id, 'iconImage': tracker.iconImage});
       });
 
       setState(() {
