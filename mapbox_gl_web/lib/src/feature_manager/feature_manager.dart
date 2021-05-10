@@ -1,22 +1,21 @@
 part of mapbox_gl_web;
 
-/// Signature for when a tap has occurred.
-typedef FeatureTapCallback = void Function(String id);
-
 abstract class FeatureManager<T> {
   final String sourceId;
   final String layerId;
   final MapboxMap map;
-  final FeatureTapCallback onTap;
+  final ArgumentCallbacks<String>? onTap;
+  @protected
+  late LatLng dragOrigin;
 
   final Map<String, Feature> _features = {};
   num featureCounter = 1;
-  String _draggableFeatureId;
+  String? _draggableFeatureId;
 
   FeatureManager({
-    @required this.sourceId,
-    @required this.layerId,
-    @required this.map,
+    required this.sourceId,
+    required this.layerId,
+    required this.map,
     this.onTap,
   }) {
     var featureSource = GeoJsonSource(data: FeatureCollection(features: []));
@@ -39,38 +38,37 @@ abstract class FeatureManager<T> {
     return '${feature.id}';
   }
 
-  
   void updateFeature(Feature feature) {
     updateFeatures([feature]);
   }
 
-  
   void updateFeatures(Iterable<Feature> features) {
-    features.forEach(
-        (feature) => _features['${feature.id}'] = feature
-    );
+    features.forEach((feature) => _features['${feature.id}'] = feature);
     _updateSource();
   }
-  
+
   void remove(String featureId) {
     removeAll([featureId]);
   }
 
   void removeAll(Iterable<String> featuresIds) {
-    featuresIds.forEach(
-      (featureId) => _features.remove(featureId)
-    );
+    featuresIds.forEach((featureId) => _features.remove(featureId));
     _updateSource();
   }
 
-  Feature getFeature(String featureId) {
+  Feature? getFeature(String featureId) {
     return _features[featureId];
   }
 
   void _initClickHandler() {
-    map.on('click', layerId, (e) {
-      if (onTap != null) {
-        onTap('${e.features[0].id}');
+    map.on('click', (e) {
+      if (e is Event) {
+        final features = map.queryRenderedFeatures([e.point.x, e.point.y]);
+        if (features.isNotEmpty && features[0].source == sourceId) {
+          if (onTap != null) {
+            onTap!('${features[0].id}');
+          }
+        }
       }
     });
 
@@ -91,13 +89,15 @@ abstract class FeatureManager<T> {
         e.preventDefault();
         _draggableFeatureId = '${e.features[0].id}';
         map.getCanvas().style.cursor = 'grabbing';
+        var coords = e.lngLat;
+        dragOrigin = LatLng(coords.lat as double, coords.lng as double);
       }
     });
 
     map.on('mousemove', (e) {
       if (_draggableFeatureId != null) {
         var coords = e.lngLat;
-        onDrag(_draggableFeatureId, LatLng(coords.lat, coords.lng));
+        onDrag(_draggableFeatureId!, LatLng(coords.lat, coords.lng));
       }
     });
 

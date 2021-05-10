@@ -1,28 +1,33 @@
 part of mapbox_gl_web;
 
+const _mapboxGlCssUrl =
+    'https://api.tiles.mapbox.com/mapbox-gl-js/v1.6.1/mapbox-gl.css';
+
 class MapboxMapController extends MapboxGlPlatform
     implements MapboxMapOptionsSink {
-  DivElement _mapElement;
+  late DivElement _mapElement;
 
-  Map<String, dynamic> _creationParams;
-  MapboxMap _map;
+  late Map<String, dynamic> _creationParams;
+  late MapboxMap _map;
 
-  SymbolManager symbolManager;
-  LineManager lineManager;
-  CircleManager circleManager;
+  List<String> annotationOrder = [];
+  late SymbolManager symbolManager;
+  late LineManager lineManager;
+  late CircleManager circleManager;
+  late FillManager fillManager;
 
   bool _trackCameraPosition = false;
-  GeolocateControl _geolocateControl;
-  LatLng _myLastLocation;
+  GeolocateControl? _geolocateControl;
+  LatLng? _myLastLocation;
 
-  String _navigationControlPosition;
-  NavigationControl _navigationControl;
+  String? _navigationControlPosition;
+  NavigationControl? _navigationControl;
 
   @override
   Widget buildView(
       Map<String, dynamic> creationParams,
-      Function onPlatformViewCreated,
-      Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers) {
+      OnPlatformViewCreatedCallback onPlatformViewCreated,
+      Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers) {
     _creationParams = creationParams;
     _registerViewFactory(onPlatformViewCreated, this.hashCode);
     return HtmlElementView(
@@ -41,7 +46,7 @@ class MapboxMapController extends MapboxGlPlatform
 
   @override
   Future<void> initPlatform(int id) async {
-    await _addStylesheetToShadowRoot();
+    await _addStylesheetToShadowRoot(_mapElement);
     if (_creationParams.containsKey('initialCameraPosition')) {
       var camera = _creationParams['initialCameraPosition'];
       if (_creationParams.containsKey('accessToken')) {
@@ -60,28 +65,23 @@ class MapboxMapController extends MapboxGlPlatform
       _map.on('load', _onStyleLoaded);
     }
     Convert.interpretMapboxMapOptions(_creationParams['options'], this);
+
+    if (_creationParams.containsKey('annotationOrder')) {
+      annotationOrder = _creationParams['annotationOrder'];
+    }
   }
 
-  Future<void> _addStylesheetToShadowRoot() async {
-    int index = -1;
-    while (index == -1) {
-      index = document.getElementsByTagName('flt-platform-view').length - 1;
-      await Future.delayed(Duration(milliseconds: 10));
-    }
-    HtmlElement e = document.getElementsByTagName('flt-platform-view')[index]
-        as HtmlElement;
-
-    LinkElement link = LinkElement();
-    link.href =
-        'https://api.tiles.mapbox.com/mapbox-gl-js/v1.6.1/mapbox-gl.css';
-    link.rel = 'stylesheet';
-    e.shadowRoot.append(link);
+  Future<void> _addStylesheetToShadowRoot(HtmlElement e) async {
+    LinkElement link = LinkElement()
+      ..href = _mapboxGlCssUrl
+      ..rel = 'stylesheet';
+    e.append(link);
 
     await link.onLoad.first;
   }
 
   @override
-  Future<CameraPosition> updateMapOptions(
+  Future<CameraPosition?> updateMapOptions(
       Map<String, dynamic> optionsUpdate) async {
     // FIX: why is called indefinitely? (map_ui page)
     Convert.interpretMapboxMapOptions(optionsUpdate, this);
@@ -89,20 +89,16 @@ class MapboxMapController extends MapboxGlPlatform
   }
 
   @override
-  Future<bool> animateCamera(CameraUpdate cameraUpdate) async {
+  Future<bool?> animateCamera(CameraUpdate cameraUpdate) async {
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
-    if (cameraOptions != null) {
-      _map.flyTo(cameraOptions);
-    }
+    _map.flyTo(cameraOptions);
     return true;
   }
 
   @override
-  Future<bool> moveCamera(CameraUpdate cameraUpdate) async {
+  Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
-    if (cameraOptions != null) {
-      _map.jumpTo(cameraOptions);
-    }
+    _map.jumpTo(cameraOptions);
     return true;
   }
 
@@ -114,7 +110,7 @@ class MapboxMapController extends MapboxGlPlatform
 
   @override
   Future<void> matchMapLanguageWithDeviceDefault() async {
-    setMapLanguage(ui.window.locale.languageCode);
+    setMapLanguage(ui.window.locale!.languageCode);
   }
 
   @override
@@ -139,31 +135,29 @@ class MapboxMapController extends MapboxGlPlatform
   }
 
   @override
-  Future<List<Symbol>> addSymbols(List<SymbolOptions> options, [List<Map> data]) async {
-    Map<String, SymbolOptions> optionsById = Map.fromIterable(
-      options,
-      key: (o) => symbolManager.add(
-          Feature(
-            geometry: Geometry(
-              type: 'Point',
-              coordinates: [o.geometry.longitude, o.geometry.latitude],
-            ),
-          )
-      ),
-      value: (o) => o
-    );
+  Future<List<Symbol>> addSymbols(List<SymbolOptions> options,
+      [List<Map>? data]) async {
+    Map<String, SymbolOptions> optionsById = {
+      for (final o in options)
+        symbolManager.add(Feature(
+          geometry: Geometry(
+            type: 'Point',
+            coordinates: [o.geometry!.longitude, o.geometry!.latitude],
+          ),
+        )): o,
+    };
     symbolManager.updateAll(optionsById);
-    
-    return optionsById.map(
-        (id, singleOptions) {
+
+    return optionsById
+        .map((id, singleOptions) {
           int dataIndex = options.indexOf(singleOptions);
-          Map singleData = data != null && data.length >= dataIndex + 1 ? data[dataIndex] : null;
-          return MapEntry(
-            id,
-            Symbol(id, singleOptions, singleData)
-          );
-        }
-    ).values.toList();
+          Map? singleData = data != null && data.length >= dataIndex + 1
+              ? data[dataIndex]
+              : null;
+          return MapEntry(id, Symbol(id, singleOptions, singleData));
+        })
+        .values
+        .toList();
   }
 
   @override
@@ -177,11 +171,11 @@ class MapboxMapController extends MapboxGlPlatform
   }
 
   @override
-  Future<Line> addLine(LineOptions options, [Map data]) async {
+  Future<Line> addLine(LineOptions options, [Map? data]) async {
     String lineId = lineManager.add(Feature(
       geometry: Geometry(
         type: 'LineString',
-        coordinates: options.geometry
+        coordinates: options.geometry!
             .map((latLng) => [latLng.longitude, latLng.latitude])
             .toList(),
       ),
@@ -201,11 +195,11 @@ class MapboxMapController extends MapboxGlPlatform
   }
 
   @override
-  Future<Circle> addCircle(CircleOptions options, [Map data]) async {
+  Future<Circle> addCircle(CircleOptions options, [Map? data]) async {
     String circleId = circleManager.add(Feature(
       geometry: Geometry(
         type: 'Point',
-        coordinates: [options.geometry.longitude, options.geometry.latitude],
+        coordinates: [options.geometry!.longitude, options.geometry!.latitude],
       ),
     ));
     circleManager.update(circleId, options);
@@ -219,7 +213,7 @@ class MapboxMapController extends MapboxGlPlatform
 
   @override
   Future<LatLng> getCircleLatLng(Circle circle) async {
-    var coordinates = circleManager.getFeature(circle.id).geometry.coordinates;
+    var coordinates = circleManager.getFeature(circle.id)!.geometry.coordinates;
     return LatLng(coordinates[1], coordinates[0]);
   }
 
@@ -228,9 +222,29 @@ class MapboxMapController extends MapboxGlPlatform
     circleManager.remove(circleId);
   }
 
+  Future<Fill> addFill(FillOptions options, [Map? data]) async {
+    String fillId = fillManager.add(Feature(
+      geometry: Geometry(
+        type: 'Polygon',
+        coordinates: Convert.fillGeometryToFeatureGeometry(options.geometry!),
+      ),
+    ));
+
+    fillManager.update(fillId, options);
+    return Fill(fillId, options, data);
+  }
+
+  Future<void> updateFill(Fill fill, FillOptions changes) async {
+    fillManager.update(fill.id, changes);
+  }
+
+  Future<void> removeFill(String fillId) async {
+    fillManager.remove(fillId);
+  }
+
   @override
   Future<List> queryRenderedFeatures(
-      Point<double> point, List<String> layerIds, List<Object> filter) async {
+      Point<double> point, List<String> layerIds, List<Object>? filter) async {
     Map<String, dynamic> options = {};
     if (layerIds.length > 0) {
       options['layers'] = layerIds;
@@ -238,12 +252,24 @@ class MapboxMapController extends MapboxGlPlatform
     if (filter != null) {
       options['filter'] = filter;
     }
-    return _map.queryRenderedFeatures([point, point], options);
+    return _map
+        .queryRenderedFeatures([point, point], options)
+        .map((feature) => {
+              'type': 'Feature',
+              'id': feature.id as int?,
+              'geometry': {
+                'type': feature.geometry.type,
+                'coordinates': feature.geometry.coordinates,
+              },
+              'properties': feature.properties,
+              'source': feature.source,
+            })
+        .toList();
   }
 
   @override
   Future<List> queryRenderedFeaturesInRect(
-      Rect rect, List<String> layerIds, String filter) async {
+      Rect rect, List<String> layerIds, String? filter) async {
     Map<String, dynamic> options = {};
     if (layerIds.length > 0) {
       options['layers'] = layerIds;
@@ -251,10 +277,22 @@ class MapboxMapController extends MapboxGlPlatform
     if (filter != null) {
       options['filter'] = filter;
     }
-    return _map.queryRenderedFeatures([
-      Point(rect.left, rect.bottom),
-      Point(rect.right, rect.top),
-    ], options);
+    return _map
+        .queryRenderedFeatures([
+          Point(rect.left, rect.bottom),
+          Point(rect.right, rect.top),
+        ], options)
+        .map((feature) => {
+              'type': 'Feature',
+              'id': feature.id as int?,
+              'geometry': {
+                'type': feature.geometry.type,
+                'coordinates': feature.geometry.coordinates,
+              },
+              'properties': feature.properties,
+              'source': feature.source,
+            })
+        .toList();
   }
 
   @override
@@ -263,7 +301,7 @@ class MapboxMapController extends MapboxGlPlatform
   }
 
   @override
-  Future<LatLng> requestMyLocationLatLng() async {
+  Future<LatLng?> requestMyLocationLatLng() async {
     return _myLastLocation;
   }
 
@@ -271,15 +309,21 @@ class MapboxMapController extends MapboxGlPlatform
   Future<LatLngBounds> getVisibleRegion() async {
     final bounds = _map.getBounds();
     return LatLngBounds(
-      southwest: LatLng(bounds.getSouthWest().lat, bounds.getSouthWest().lng),
-      northeast: LatLng(bounds.getNorthEast().lat, bounds.getNorthEast().lng),
+      southwest: LatLng(
+        bounds.getSouthWest().lat as double,
+        bounds.getSouthWest().lng as double,
+      ),
+      northeast: LatLng(
+        bounds.getNorthEast().lat as double,
+        bounds.getNorthEast().lng as double,
+      ),
     );
   }
 
   @override
   Future<void> addImage(String name, Uint8List bytes,
       [bool sdf = false]) async {
-    final photo = decodeImage(bytes);
+    final photo = decodeImage(bytes)!;
     if (!_map.hasImage(name)) {
       _map.addImage(
         name,
@@ -317,23 +361,42 @@ class MapboxMapController extends MapboxGlPlatform
     print('setSymbolTextIgnorePlacement not implemented yet');
   }
 
-  CameraPosition _getCameraPosition() {
+  CameraPosition? _getCameraPosition() {
     if (_trackCameraPosition) {
       final center = _map.getCenter();
       return CameraPosition(
-        bearing: _map.getBearing(),
-        target: LatLng(center.lat, center.lng),
-        tilt: _map.getPitch(),
-        zoom: _map.getZoom(),
+        bearing: _map.getBearing() as double,
+        target: LatLng(center.lat as double, center.lng as double),
+        tilt: _map.getPitch() as double,
+        zoom: _map.getZoom() as double,
       );
     }
     return null;
   }
 
   void _onStyleLoaded(_) {
-    symbolManager = SymbolManager(map: _map, onTap: onSymbolTappedPlatform);
-    lineManager = LineManager(map: _map, onTap: onLineTappedPlatform);
-    circleManager = CircleManager(map: _map, onTap: onCircleTappedPlatform);
+    for (final annotationType in annotationOrder) {
+      switch (annotationType) {
+        case 'AnnotationType.symbol':
+          symbolManager =
+              SymbolManager(map: _map, onTap: onSymbolTappedPlatform);
+          break;
+        case 'AnnotationType.line':
+          lineManager = LineManager(map: _map, onTap: onLineTappedPlatform);
+          break;
+        case 'AnnotationType.circle':
+          circleManager =
+              CircleManager(map: _map, onTap: onCircleTappedPlatform);
+          break;
+        case 'AnnotationType.fill':
+          fillManager = FillManager(map: _map, onTap: onFillTappedPlatform);
+          break;
+        default:
+          print(
+              "Unknown annotation type: \(annotationType), must be either 'fill', 'line', 'circle' or 'symbol'");
+      }
+    }
+
     onMapStyleLoadedPlatform(null);
     _map.on('click', _onMapClick);
     // long click not available in web, so it is mapped to double click
@@ -341,6 +404,19 @@ class MapboxMapController extends MapboxGlPlatform
     _map.on('movestart', _onCameraMoveStarted);
     _map.on('move', _onCameraMove);
     _map.on('moveend', _onCameraIdle);
+    _map.on('resize', _onMapResize);
+  }
+
+  void _onMapResize(Event e) {
+    Timer(Duration(microseconds: 10), () {
+      var container = _map.getContainer();
+      var canvas = _map.getCanvas();
+      var widthMismatch = canvas.clientWidth != container.clientWidth;
+      var heightMismatch = canvas.clientHeight != container.clientHeight;
+      if (widthMismatch || heightMismatch) {
+        _map.resize();
+      }
+    });
   }
 
   void _onMapClick(e) {
@@ -364,16 +440,23 @@ class MapboxMapController extends MapboxGlPlatform
   void _onCameraMove(_) {
     final center = _map.getCenter();
     var camera = CameraPosition(
-      bearing: _map.getBearing(),
-      target: LatLng(center.lat, center.lng),
-      tilt: _map.getPitch(),
-      zoom: _map.getZoom(),
+      bearing: _map.getBearing() as double,
+      target: LatLng(center.lat as double, center.lng as double),
+      tilt: _map.getPitch() as double,
+      zoom: _map.getZoom() as double,
     );
     onCameraMovePlatform(camera);
   }
 
   void _onCameraIdle(_) {
-    onCameraIdlePlatform(null);
+    final center = _map.getCenter();
+    var camera = CameraPosition(
+      bearing: _map.getBearing() as double,
+      target: LatLng(center.lat as double, center.lng as double),
+      tilt: _map.getPitch() as double,
+      zoom: _map.getZoom() as double,
+    );
+    onCameraIdlePlatform(camera);
   }
 
   void _onCameraTrackingChanged(bool isTracking) {
@@ -388,24 +471,32 @@ class MapboxMapController extends MapboxGlPlatform
     onCameraTrackingDismissedPlatform(null);
   }
 
-  void _addGeolocateControl({bool trackUserLocation}) {
+  void _addGeolocateControl({bool trackUserLocation = false}) {
     _removeGeolocateControl();
     _geolocateControl = GeolocateControl(
       GeolocateControlOptions(
         positionOptions: PositionOptions(enableHighAccuracy: true),
-        trackUserLocation: trackUserLocation ?? false,
+        trackUserLocation: trackUserLocation,
         showAccuracyCircle: true,
         showUserLocation: true,
       ),
     );
-    _geolocateControl.on('geolocate', (e) {
+    _geolocateControl!.on('geolocate', (e) {
       _myLastLocation = LatLng(e.coords.latitude, e.coords.longitude);
-      onUserLocationUpdatedPlatform(UserLocation(position: LatLng(e.coords.latitude, e.coords.longitude), altitude: e.coords.altitude, bearing: e.coords.heading, speed: e.coords.speed, horizontalAccuracy: e.coords.accuracy, verticalAccuracy: e.coords.altitudeAccuracy, timestamp: DateTime.fromMillisecondsSinceEpoch(e.timestamp)));
+      onUserLocationUpdatedPlatform(UserLocation(
+          position: LatLng(e.coords.latitude, e.coords.longitude),
+          altitude: e.coords.altitude,
+          bearing: e.coords.heading,
+          speed: e.coords.speed,
+          horizontalAccuracy: e.coords.accuracy,
+          verticalAccuracy: e.coords.altitudeAccuracy,
+          heading: null,
+          timestamp: DateTime.fromMillisecondsSinceEpoch(e.timestamp)));
     });
-    _geolocateControl.on('trackuserlocationstart', (_) {
+    _geolocateControl!.on('trackuserlocationstart', (_) {
       _onCameraTrackingChanged(true);
     });
-    _geolocateControl.on('trackuserlocationend', (_) {
+    _geolocateControl!.on('trackuserlocationend', (_) {
       _onCameraTrackingChanged(false);
       _onCameraTrackingDismissed();
     });
@@ -420,16 +511,16 @@ class MapboxMapController extends MapboxGlPlatform
   }
 
   void _updateNavigationControl({
-    bool compassEnabled,
-    CompassViewPosition position,
+    bool? compassEnabled,
+    CompassViewPosition? position,
   }) {
-    bool prevShowCompass;
+    bool? prevShowCompass;
     if (_navigationControl != null) {
-      prevShowCompass = _navigationControl.options.showCompass;
+      prevShowCompass = _navigationControl!.options.showCompass;
     }
-    String prevPosition = _navigationControlPosition;
+    String? prevPosition = _navigationControlPosition;
 
-    String positionString;
+    String? positionString;
     switch (position) {
       case CompassViewPosition.TopRight:
         positionString = 'top-right';
@@ -448,7 +539,7 @@ class MapboxMapController extends MapboxGlPlatform
     }
 
     bool newShowComapss = compassEnabled ?? prevShowCompass ?? false;
-    String newPosition = positionString ?? prevPosition ?? null;
+    String? newPosition = positionString ?? prevPosition ?? null;
 
     _removeNavigationControl();
     _navigationControl = NavigationControl(NavigationControlOptions(
@@ -481,7 +572,7 @@ class MapboxMapController extends MapboxGlPlatform
   }
 
   @override
-  void setCameraTargetBounds(LatLngBounds bounds) {
+  void setCameraTargetBounds(LatLngBounds? bounds) {
     if (bounds == null) {
       _map.setMaxBounds(null);
     } else {
@@ -521,7 +612,7 @@ class MapboxMapController extends MapboxGlPlatform
   }
 
   @override
-  void setMinMaxZoomPreference(num min, num max) {
+  void setMinMaxZoomPreference(num? min, num? max) {
     // FIX: why is called indefinitely? (map_ui page)
     _map.setMinZoom(min);
     _map.setMaxZoom(max);
@@ -543,7 +634,7 @@ class MapboxMapController extends MapboxGlPlatform
 
   @override
   void setMyLocationTrackingMode(int myLocationTrackingMode) {
-    if(_geolocateControl==null){
+    if (_geolocateControl == null) {
       //myLocationEnabled is false, ignore myLocationTrackingMode
       return;
     }
@@ -580,7 +671,7 @@ class MapboxMapController extends MapboxGlPlatform
   }
 
   @override
-  void setStyleString(String styleString) {
+  void setStyleString(String? styleString) {
     _map.setStyle(styleString);
   }
 
@@ -619,21 +710,32 @@ class MapboxMapController extends MapboxGlPlatform
 
   @override
   Future<Point> toScreenLocation(LatLng latLng) async {
-    var screenPosition = _map.project(LngLat(latLng.longitude, latLng.latitude));
+    var screenPosition =
+        _map.project(LngLat(latLng.longitude, latLng.latitude));
     return Point(screenPosition.x.round(), screenPosition.y.round());
   }
 
   @override
-  Future<LatLng> toLatLng(Point screenLocation) async {
-    var lngLat = _map.unproject(mapbox.Point(screenLocation.x, screenLocation.y));
-    return LatLng(lngLat.lat, lngLat.lng);
+  Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs) async {
+    return latLngs.map((latLng) {
+      var screenPosition =
+          _map.project(LngLat(latLng.longitude, latLng.latitude));
+      return Point(screenPosition.x.round(), screenPosition.y.round());
+    }).toList(growable: false);
   }
 
   @override
-  Future<double> getMetersPerPixelAtLatitude(double latitude) async{
+  Future<LatLng> toLatLng(Point screenLocation) async {
+    var lngLat =
+        _map.unproject(mapbox.Point(screenLocation.x, screenLocation.y));
+    return LatLng(lngLat.lat as double, lngLat.lng as double);
+  }
+
+  @override
+  Future<double> getMetersPerPixelAtLatitude(double latitude) async {
     //https://wiki.openstreetmap.org/wiki/Zoom_levels
     var circumference = 40075017.686;
     var zoom = _map.getZoom();
-    return circumference * cos(latitude * (pi/180)) / pow(2, zoom + 9);
+    return circumference * cos(latitude * (pi / 180)) / pow(2, zoom + 9);
   }
 }
