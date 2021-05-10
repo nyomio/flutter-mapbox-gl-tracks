@@ -140,16 +140,16 @@ class TrackerMapState extends State<TrackerMap> {
     final svgString = await rootBundle.loadString(markerImagePath);
     final DrawableRoot svgRoot = await svg.fromSvgString(svgString, "");
     final ui.Picture picture = svgRoot.toPicture(colorFilter: ColorFilter.mode(Constants.fromHex(color), BlendMode.srcIn));
-    final ui.Image _image = await picture.toImage(90, 90);
-    canvas.drawImage(_image, Offset(0.0,0.0), new Paint());
+    final ui.Image _image = await picture.toImage(100, 100);
+    canvas.drawImage(_image, Offset(0.0,00.0), new Paint());
     if (iconImagePath != null && iconImagePath != "") {
-      final ui.Image iconImage = await getUiImage(iconImagePath, 50, 50);
+      final ui.Image iconImage = await getUiImage(iconImagePath, 40, 40);
       Paint paint = new Paint();
       /**
        * Ha szines ikonok kellenek
        */
       //paint.colorFilter = ColorFilter.mode(Constants.fromHex("#ffffff"), BlendMode.srcIn);
-      canvas.drawImage(iconImage, Offset(20.0, 20.0), paint);
+      canvas.drawImage(iconImage, Offset(25.0, 15.0), paint);
     }
     final mergedPicture = recorder.endRecording();
     final img = await mergedPicture.toImage(90, 90);
