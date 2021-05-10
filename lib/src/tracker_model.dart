@@ -12,8 +12,8 @@ class TrackerModel{
     this.id = trackerId;
     this.coordinates = coordinates;
     this.color = color;
-    this.markerImage = iconImage;
-    this.iconImage = markerImage;
+    this.markerImage = markerImage;
+    this.iconImage = iconImage;
   }
 
   @override
