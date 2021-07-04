@@ -1,4 +1,3 @@
-
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -14,62 +13,58 @@ import 'package:mapbox_gl/src/trip.dart';
 
 // ignore: must_be_immutable
 class MapWithTrip extends StatefulWidget {
+  final List<Trip> tripData;
+  final String accessToken;
+  final String startIconPath;
+  final String endIconPath;
+  final Function(GpsLocation) tripPressCallback;
+  final Function() onStyleLoaded;
 
-  List<Trip> tripData;
-  String accessToken;
-  String startIconPath;
-  String endIconPath;
-  Function(GpsLocation) tripPressCallback;
-  Function() onStyleLoaded;
-
-  MapWithTrip(List<Trip> trip, String token, String startIconPath, String endIconPath, Function(GpsLocation) callback, Function() styleLoaded) {
-    this.tripData = trip;
-    this.accessToken = token;
-    this.tripPressCallback = callback;
-    this.onStyleLoaded = styleLoaded;
-    this.endIconPath = endIconPath;
-    this.startIconPath = startIconPath;
-
-  }
+  MapWithTrip(this.tripData, this.accessToken, this.startIconPath, this.endIconPath, this.tripPressCallback, this.onStyleLoaded);
 
   @override
   State<StatefulWidget> createState() => MapWithTripState();
 }
 
 class MapWithTripState extends State<MapWithTrip> {
-
-  int _symbolCount = 0;
-  int eventCount = 0;
   Symbol _selectedSymbol;
   MapboxMapController controller;
   Line _selectedLine;
 
-  void _onMapCreated(MapboxMapController controller) {
-    this.controller = controller;
-    //controller.onLineTapped.add(_onLineTapped);
+  bool _startImageAdded = false;
+
+  Future<void> addStartImageAsset(String color, GpsLocation location) async {
+    String iconName = "start_" + color.replaceAll("#", "_");
+    if (!_startImageAdded) {
+      String assetName = widget.startIconPath;
+      String svgString = await rootBundle.loadString(assetName);
+      DrawableRoot svgRoot = await svg.fromSvgString(svgString, "");
+      ui.Picture picture = svgRoot.toPicture(colorFilter: ColorFilter.mode(Constants.fromHex(color), BlendMode.srcIn));
+      ui.Image _image = await picture.toImage(90, 90);
+      ByteData bytes = await _image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List list = bytes.buffer.asUint8List();
+      await controller.addImage(iconName, list);
+      _startImageAdded = true;
+    }
+    _addLocation(location, iconName);
   }
 
-  Future<void> addStartImageAsset(String color, GpsLocation event) async {
-    final String assetName = widget.startIconPath;
-    final svgString = await rootBundle.loadString(assetName);
-    final DrawableRoot svgRoot = await svg.fromSvgString(svgString, "");
-    final ui.Picture picture = svgRoot.toPicture(colorFilter: ColorFilter.mode(Constants.fromHex(color), BlendMode.srcIn));
-    final ui.Image _image = await picture.toImage(90, 90);
-    final ByteData bytes = await _image.toByteData(format: ui.ImageByteFormat.png);
-    final Uint8List list = bytes.buffer.asUint8List();
-    String iconName = "start_"+color.replaceAll("#", "_");
-    await controller.addImage(iconName, list).whenComplete(() => _addEvent(event, iconName));
-  }
-  Future<void> addEndImageAsset(String color, GpsLocation event) async {
-    final String assetName = widget.endIconPath;
-    final svgString = await rootBundle.loadString(assetName);
-    final DrawableRoot svgRoot = await svg.fromSvgString(svgString, "");
-    final ui.Picture picture = svgRoot.toPicture(colorFilter: ColorFilter.mode(Constants.fromHex(color), BlendMode.srcIn));
-    final ui.Image _image = await picture.toImage(90, 90);
-    final ByteData bytes = await _image.toByteData(format: ui.ImageByteFormat.png);
-    final Uint8List list = bytes.buffer.asUint8List();
-    String iconName = "stop_"+color.replaceAll("#", "_");
-    await controller.addImage(iconName, list).whenComplete(() => _addEvent(event, iconName));
+  bool _stopImageAdded = false;
+
+  Future<void> addEndImageAsset(String color, GpsLocation location) async {
+    String iconName = "stop_" + color.replaceAll("#", "_");
+    if (!_stopImageAdded) {
+      String assetName = widget.endIconPath;
+      String svgString = await rootBundle.loadString(assetName);
+      DrawableRoot svgRoot = await svg.fromSvgString(svgString, "");
+      ui.Picture picture = svgRoot.toPicture(colorFilter: ColorFilter.mode(Constants.fromHex(color), BlendMode.srcIn));
+      ui.Image _image = await picture.toImage(90, 90);
+      ByteData bytes = await _image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List list = bytes.buffer.asUint8List();
+      await controller.addImage(iconName, list);
+      _stopImageAdded = true;
+    }
+    _addLocation(location, iconName);
   }
 
   @override
@@ -98,11 +93,9 @@ class MapWithTripState extends State<MapWithTrip> {
     );*/
   }
 
-  /**
-   * If I click on the map it returns the coordinate of the nearest route, if it is more than 20 meters away it returns the coordinate of the point where we clicked
-   */
+  /// If I click on the map it returns the coordinate of the nearest route, if it is more than 20 meters away it returns the coordinate of the point where we clicked
   void _onMapClicked(Point<double> point, LatLng latLng) {
-   /* double minDistance = 100000.0;
+    /* double minDistance = 100000.0;
     GpsLocation selectedGpsLocation;
     this.tripData.coordinates.forEach((element) {
       double distance = calculateDistance(element.lat, element.long, latLng.latitude, latLng.longitude);
@@ -114,7 +107,7 @@ class MapWithTripState extends State<MapWithTrip> {
       tripPressCallback(selectedGpsLocation);
     }
     else {*/
-    widget.tripPressCallback(GpsLocation(latLng.latitude,latLng.longitude,0.0,0.0,0.0,0));
+    widget.tripPressCallback(GpsLocation(latLng.latitude, latLng.longitude, 0.0, 0.0, 0.0, 0));
     /*}*/
   }
 
@@ -122,26 +115,28 @@ class MapWithTripState extends State<MapWithTrip> {
     controller.updateLine(_selectedLine, changes);
   }
 
-  /**
-   * Once loaded, the map draws the pre-specified route and indicates the Start-Stop event
-   */
-  void onStyleLoadedCallback() {
-    if(widget.tripData != null && widget.tripData.isNotEmpty) {
-      setUpTrips();
-      List<LatLng> list = new List<LatLng>();
-      widget.tripData.forEach((e) {
-        e.coordinates.forEach((element) {
-            list.add(LatLng(element.lat, element.long));
-        });
-      });
+  void _onMapCreated(MapboxMapController controller) {
+    this.controller = controller;
+    //controller.onLineTapped.add(_onLineTapped);
+  }
 
-      controller.moveCamera(CameraUpdate.newLatLngBounds(Constants.boundsFromLatLngList(list)));
+  ///Once loaded, the map draws the pre-specified route and indicates the Start-Stop event
+  Future<void> onStyleLoadedCallback() async {
+    List<LatLng> list = [];
+    if (widget.tripData != null) {
+      for (Trip trip in widget.tripData) {
+        for (GpsLocation loc in trip.coordinates) {
+          list.add(LatLng(loc.lat, loc.long));
+        }
+      }
+      await setUpTrips();
     }
+    await controller.moveCamera(CameraUpdate.newLatLngBounds(Constants.boundsFromLatLngList(list)));
     widget.onStyleLoaded();
   }
 
-  void setUpTrips(){
-    widget.tripData.forEach((trip) {
+  Future<void> setUpTrips() async {
+    for (Trip trip in widget.tripData) {
       if (trip.coordinates.length > 1) {
         List<LatLng> geometry = [];
         trip.coordinates.sort((a, b) => a.time.compareTo(b.time));
@@ -160,7 +155,7 @@ class MapWithTripState extends State<MapWithTrip> {
         addStartImageAsset(trip.startColor, trip.coordinates.first);
         addEndImageAsset(trip.endColor, trip.coordinates.last);
       }
-    });
+    }
   }
 
   void _onEventTapped(Symbol symbol) {
@@ -169,23 +164,16 @@ class MapWithTripState extends State<MapWithTrip> {
     });
   }
 
-  Future<void>  _updateSelectedEvent(SymbolOptions changes) {
+  Future<void> _updateSelectedEvent(SymbolOptions changes) {
     controller.updateSymbol(_selectedSymbol, changes);
   }
 
-  void _addEvent(GpsLocation event, String icon) {
-    if (event != null) {
-      controller.addSymbol(
-          Constants.getSymbolOptions(icon, LatLng(event.lat,event.long), event.time.toString()), {'eventId': event.time}
-      );
-      print("addEvent " + icon);
-      eventCount += 1;
-      setState(() {
-        _symbolCount += 1;
-      });
+  Future<void> _addLocation(GpsLocation location, String icon) async {
+    if (location != null) {
+      await controller.addSymbol(Constants.getSymbolOptions(icon, LatLng(location.lat, location.long), location.time.toString()), {'eventId': location.time});
+      //print("addEvent " + icon);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +184,7 @@ class MapWithTripState extends State<MapWithTrip> {
       onMapClick: _onMapClicked,
       styleString: Constants.MAP_TILE_JSON,
       initialCameraPosition: CameraPosition(
-        target: LatLng(47,19),
+        target: LatLng(47, 19),
         zoom: 11.0,
       ),
     );

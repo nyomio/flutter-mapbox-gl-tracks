@@ -7,7 +7,6 @@ import 'package:mapbox_gl/mapbox_gl.dart';
 
 import 'dart:async';
 import 'dart:ui' as ui;
-import 'dart:io' show Platform;
 
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';

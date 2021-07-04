@@ -35,7 +35,7 @@ class Constants {
   }
 
   static LatLngBounds boundsFromLatLngList(List<LatLng> coordinates) {
-    if (coordinates == null || coordinates.isEmpty) return LatLngBounds();
+    //if (coordinates == null || coordinates.isEmpty) return LatLngBounds();
 
     double x0, x1, y0, y1;
     for (LatLng latLng in coordinates) {

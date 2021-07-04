@@ -47,7 +47,7 @@ android {
         targetCompatibility 1.8
     }
     buildToolsVersion '30.0.2'
-    ndkVersion '22.0.7026061'
+    ndkVersion '20.1.5948944'
 }
 
 flutter {
